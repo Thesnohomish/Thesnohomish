@@ -1,10 +1,1 @@
-{
-  "name": "ChupaHub",
-  "short_name": "ChupaHub",
-  "description": "Order genuine wines, whisky, gin, vodka, beer and other drinks online from ChupaHub. Enjoy fast, reliable alcohol delivery across Nairobi, 24/7.",
-  "start_url": "/",
-  "icons": [{ "src": "/chupahub-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
-  "theme_color": "#F97316",
-  "background_color": "#FFFFFF",
-  "display": "standalone"
-}
+{"name":"The Snohomish","short_name":"Snohomish","description":"Wines, spirits and beverages for retail and wholesale customers across Nairobi.","start_url":"/","display":"standalone","background_color":"#0d0d0d","theme_color":"#fff500","icons":[{"src":"/snohomish-logo.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}

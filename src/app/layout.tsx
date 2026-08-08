@@ -8,8 +8,8 @@ import { businessGraph, DEFAULT_DESCRIPTION, JsonLd, SITE_NAME, SITE_URL } from 
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'ChupaHub | Online Wines, Spirits & Alcohol Delivery Nairobi',
-    template: '%s | ChupaHub',
+    default: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi',
+    template: '%s | The Snohomish',
   },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
@@ -22,22 +22,20 @@ const baseMetadata: Metadata = {
     'Whisky Delivery Nairobi',
     'Gin Delivery Nairobi',
     'Beer Delivery Nairobi',
-    'Chupa Chap alternative',
-    'Oaks & Corks alternative',
-    'Greenspoon alternative',
-    'Quickmart alternative',
+    'Wholesale Drinks Nairobi',
+    'Trade Beverage Supplier',
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'ChupaHub | Online Wines, Spirits & Alcohol Delivery Nairobi',
+    title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi',
     description: DEFAULT_DESCRIPTION,
     type: 'website', url: SITE_URL, siteName: SITE_NAME, locale: 'en_KE',
   },
-  twitter: { card: 'summary', title: 'ChupaHub | Online Wines, Spirits & Alcohol Delivery Nairobi', description: DEFAULT_DESCRIPTION },
+  twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION },
   icons: {
-    icon: [{ url: '/chupahub-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
-    shortcut: '/chupahub-logo.svg',
-    apple: [{ url: '/chupahub-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
+    icon: [{ url: '/snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
+    shortcut: '/snohomish-logo.svg',
+    apple: [{ url: '/snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
   },
   manifest: '/site.webmanifest',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
@@ -47,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const content = await getSiteContent();
   return {
     ...baseMetadata,
-    openGraph: { ...baseMetadata.openGraph, images: [{ url: content.logo_url || '/chupahub-logo.svg', alt: 'ChupaHub logo' }] },
+    openGraph: { ...baseMetadata.openGraph, images: [{ url: content.logo_url || '/snohomish-logo.svg', alt: 'The Snohomish logo' }] },
   };
 }
 
