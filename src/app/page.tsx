@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { CategoryGrid, ProductRail } from '@/components/Site';
+import { ProductRail } from '@/components/Site';
 import { getBanners, getCategories, getHomepageSections, getProducts, getPromotions, getSiteContent, money } from '@/lib/supabase';
 import { stableCollectionSlug } from '@/lib/public-urls';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   title: { absolute: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi' },
   description: DEFAULT_DESCRIPTION,
   alternates: { canonical: '/' },
-  openGraph: { title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, url: '/', siteName: 'The Snohomish', type: 'website', images: [{ url: '/snohomish-logo.svg', alt: 'The Snohomish logo' }] },
-  twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, images: ['/snohomish-logo.svg'] },
+  openGraph: { title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, url: '/', siteName: 'The Snohomish', type: 'website', images: [{ url: '/the-snohomish-logo.svg', alt: 'The Snohomish logo' }] },
+  twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, images: ['/the-snohomish-logo.svg'] },
 };
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
@@ -37,7 +37,12 @@ export default async function Home() {
       </div>
     </section>
     <div className="partner-marquee" aria-label="The Snohomish retail and trade services"><div className="marquee-track">{[0,1].map(copy=><div className="marquee-group" aria-hidden={copy===1} key={copy}><span>Retail shopping</span><b>•</b><span>Wholesale supply</span><b>•</b><span>Business deliveries</span><b>•</b><span>Bulk orders</span><b>•</b><span>Three Nairobi stores</span><b>•</b></div>)}</div></div>
-    <section className="bg-[#f5f4f0] py-10"><div className="mx-auto max-w-7xl px-5 md:px-8"><div className="section-heading"><div><p className="eyebrow dark">Shop by department</p><h2>Explore our selection</h2></div><Link href="/shop">Shop all <ArrowRight size={17}/></Link></div><CategoryGrid categories={categories.filter(c=>!c.parent_id)}/></div></section>
+    <section id="categories" className="category-atlas">
+      <div className="mx-auto max-w-7xl px-5 py-16 md:px-8 md:py-24">
+        <div className="category-atlas-heading"><div><p className="eyebrow">The complete drinks atlas</p><h2>Every category.<br/><em>One destination.</em></h2></div><div className="category-atlas-intro"><span>{String(categories.length).padStart(2,'0')}</span><p>Explore our full collection—from celebration bottles and classic spirits to beers, mixers, soft drinks and snacks.</p><Link href="/shop">Browse all products <ArrowRight size={17}/></Link></div></div>
+        <div className="category-atlas-grid">{categories.map((category,index)=>{const parent=categories.find(item=>item.id===category.parent_id);const count=products.filter(product=>product.categories?.slug===category.slug).length;return <Link href={`/category/${category.slug}`} key={category.id} className="category-atlas-card"><div className="category-atlas-image" style={category.image_url?{backgroundImage:`url(${category.image_url})`}:undefined}/><div className="category-atlas-number">{String(index+1).padStart(2,'0')}</div><div className="category-atlas-copy"><small>{parent?.name||'Department'} · {count} {count===1?'product':'products'}</small><h3>{category.name}</h3><span>Explore <ArrowRight size={15}/></span></div></Link>})}</div>
+      </div>
+    </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{sections.map((section,index)=><ProductRail key={`${section.title}-${index}`} {...section}/>)}</section>
     <section id="wholesale" className="mx-auto grid max-w-7xl gap-4 px-5 py-16 md:grid-cols-2 md:px-8"><div className="audience-card retail"><p>Retail</p><ShoppingBag/><h2>Shopping for yourself?</h2><span>Shop wines, spirits, beers, mixers and more with convenient delivery and collection.</span><Link href="/shop">Shop online <ArrowRight size={17}/></Link></div><div className="audience-card wholesale"><p>Wholesale</p><Boxes/><h2>Buying for your business?</h2><span>Competitive trade pricing for bars, restaurants, hotels, supermarkets, retailers, events and corporate customers.</span><Link href="/contact?subject=trade-account">Request wholesale pricing <ArrowRight size={17}/></Link></div></section>
