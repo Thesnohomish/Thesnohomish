@@ -6,7 +6,9 @@ export function BrandLogo({ footer = false }: { footer?: boolean }) {
       <img
         src={OFFICIAL_LOGO_SRC}
         alt="The Snohomish"
-        className={footer ? 'h-36 w-36 rounded-2xl object-contain' : 'h-16 w-16 rounded-xl object-contain'}
+        className={footer
+          ? 'h-44 w-44 rounded-full object-cover ring-2 ring-[#fff500]'
+          : 'h-16 w-16 rounded-full object-cover ring-2 ring-[#fff500] sm:h-20 sm:w-20'}
       />
     </div>
   );
