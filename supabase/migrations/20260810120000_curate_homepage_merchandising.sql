@@ -20,7 +20,7 @@ where slug like 'glenbrynth-%';
 insert into public.homepage_banners
   (id, title, subtitle, image_url, badge_text, button_label, button_url, sort_order, is_active)
 values
-  ('b0000000-0000-4000-8000-000000000101', 'Buy one Glenbrynth.', 'Explore every Glenbrynth expression and enjoy our limited buy one, get one free event while promotional stock lasts.', '/the-snohomish-logo.svg', 'Buy one · Get one free', 'Shop Glenbrynth', '/search?q=glenbrynth', -100, true)
+  ('b0000000-0000-4000-8000-000000000101', 'Buy two Glenbrynth.', 'Explore every Glenbrynth expression and enjoy our limited buy two, get one free event while promotional stock lasts.', '/the-snohomish-logo.svg', 'Buy two · Get one free', 'Shop Glenbrynth', '/search?q=glenbrynth', -100, true)
 on conflict (id) do update set
   title = excluded.title, subtitle = excluded.subtitle, image_url = excluded.image_url,
   badge_text = excluded.badge_text, button_label = excluded.button_label,
