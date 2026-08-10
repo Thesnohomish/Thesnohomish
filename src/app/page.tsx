@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { CategoryGrid, ProductRail } from '@/components/Site';
+import { ProductRail } from '@/components/Site';
 import { getBanners, getCategories, getHomepageSections, getProducts, getPromotions, getSiteContent, money } from '@/lib/supabase';
 import { stableCollectionSlug } from '@/lib/public-urls';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
@@ -12,11 +12,15 @@ export const metadata: Metadata = {
   title: { absolute: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi' },
   description: DEFAULT_DESCRIPTION,
   alternates: { canonical: '/' },
-  openGraph: { title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, url: '/', siteName: 'The Snohomish', type: 'website', images: [{ url: '/snohomish-logo.svg', alt: 'The Snohomish logo' }] },
-  twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, images: ['/snohomish-logo.svg'] },
+  openGraph: { title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, url: '/', siteName: 'The Snohomish', type: 'website', images: [{ url: '/the-snohomish-logo.svg', alt: 'The Snohomish logo' }] },
+  twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION, images: ['/the-snohomish-logo.svg'] },
 };
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
+const essentialCategories = [
+  ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
+  ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
+].map(([name,slug])=>({id:`essential-${slug}`,name,slug}));
 const benefits = [
   [Truck, 'Fast delivery', 'Nairobi delivery and convenient collection options.'],
   [PackageCheck, 'Authentic products', 'Trusted wines, spirits and beverages sourced through verified distribution channels.'],
@@ -27,6 +31,7 @@ const benefits = [
 export default async function Home() {
   const [categories, banners, products, promotions, content, configuredSections] = await Promise.all([getCategories(), getBanners(), getProducts(), getPromotions(), getSiteContent(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), arrivals = products.filter(p => p.is_new_arrival).sort((a,b)=>Date.parse(b.updated_at||'')-Date.parse(a.updated_at||'')), featured = products.filter(p => p.is_featured);
+  const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
   const sections = (configuredSections.length ? configuredSections.map(section => { const heading=section.heading.toLowerCase(); const selected=section.product_ids?.length?section.product_ids.map(id=>products.find(p=>p.id===id)).filter((p):p is typeof products[number]=>Boolean(p)):heading.includes('new arrival')?arrivals:heading.includes('deal')||heading.includes('featured')||heading.includes('offer')?featured:section.use_best_sellers||heading.includes('top seller')||heading.includes('best seller')?topSellers:section.category_id?products.filter(p=>p.categories?.slug===section.categories?.slug):products; return {title:section.heading,products:selected,href:`/collections/${stableCollectionSlug(section)||'featured'}`,limit:section.item_limit}; }):[{title:'Deals of the Day',products:featured,href:'/offers',limit:8},{title:'Top Sellers',products:topSellers,href:'/collections/top-sellers',limit:8},{title:'New Arrivals',products:arrivals,href:'/collections/new-arrivals',limit:8}]).filter(s=>s.products.length);
   const heroImage = banners[0]?.image_url;
   return <main>
@@ -37,7 +42,12 @@ export default async function Home() {
       </div>
     </section>
     <div className="partner-marquee" aria-label="The Snohomish retail and trade services"><div className="marquee-track">{[0,1].map(copy=><div className="marquee-group" aria-hidden={copy===1} key={copy}><span>Retail shopping</span><b>•</b><span>Wholesale supply</span><b>•</b><span>Business deliveries</span><b>•</b><span>Bulk orders</span><b>•</b><span>Three Nairobi stores</span><b>•</b></div>)}</div></div>
-    <section className="bg-[#f5f4f0] py-10"><div className="mx-auto max-w-7xl px-5 md:px-8"><div className="section-heading"><div><p className="eyebrow dark">Shop by department</p><h2>Explore our selection</h2></div><Link href="/shop">Shop all <ArrowRight size={17}/></Link></div><CategoryGrid categories={categories.filter(c=>!c.parent_id)}/></div></section>
+    <section id="categories" className="category-directory">
+      <div className="px-5 py-12 md:px-8 md:py-16">
+        <div className="category-directory-heading"><div><p>Find your favourite</p><h2>Shop all categories</h2></div><Link href="/shop">View every product <ArrowRight size={17}/></Link></div>
+        <div className="category-directory-grid">{allCategories.map((category,index)=>{const count=products.filter(product=>product.categories?.slug===category.slug).length;return <Link href={`/category/${category.slug}`} key={category.id} className="category-directory-card"><div className="category-directory-art" style={'image_url' in category&&category.image_url?{backgroundImage:`url(${category.image_url})`}:undefined}><b>{category.name.slice(0,2).toUpperCase()}</b></div><div><small>{count?`${count} ${count===1?'product':'products'}`:'Browse collection'}</small><h3>{category.name}</h3></div><span><ArrowRight size={17}/></span><i>{String(index+1).padStart(2,'0')}</i></Link>})}</div>
+      </div>
+    </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{sections.map((section,index)=><ProductRail key={`${section.title}-${index}`} {...section}/>)}</section>
     <section id="wholesale" className="mx-auto grid max-w-7xl gap-4 px-5 py-16 md:grid-cols-2 md:px-8"><div className="audience-card retail"><p>Retail</p><ShoppingBag/><h2>Shopping for yourself?</h2><span>Shop wines, spirits, beers, mixers and more with convenient delivery and collection.</span><Link href="/shop">Shop online <ArrowRight size={17}/></Link></div><div className="audience-card wholesale"><p>Wholesale</p><Boxes/><h2>Buying for your business?</h2><span>Competitive trade pricing for bars, restaurants, hotels, supermarkets, retailers, events and corporate customers.</span><Link href="/contact?subject=trade-account">Request wholesale pricing <ArrowRight size={17}/></Link></div></section>
