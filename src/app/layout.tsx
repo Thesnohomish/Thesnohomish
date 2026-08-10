@@ -33,19 +33,18 @@ const baseMetadata: Metadata = {
   },
   twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION },
   icons: {
-    icon: [{ url: '/snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
-    shortcut: '/snohomish-logo.svg',
-    apple: [{ url: '/snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
+    icon: [{ url: '/the-snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
+    shortcut: '/the-snohomish-logo.svg',
+    apple: [{ url: '/the-snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
   },
   manifest: '/site.webmanifest',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
 };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const content = await getSiteContent();
+export function generateMetadata(): Metadata {
   return {
     ...baseMetadata,
-    openGraph: { ...baseMetadata.openGraph, images: [{ url: content.logo_url || '/snohomish-logo.svg', alt: 'The Snohomish logo' }] },
+    openGraph: { ...baseMetadata.openGraph, images: [{ url: '/the-snohomish-logo.svg', alt: 'The Snohomish logo' }] },
   };
 }
 
@@ -57,7 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="app-shell min-h-screen">
         <Header content={content} products={products} />
         <CartFeedback />
-        <JsonLd data={businessGraph([content.instagram_url || '', content.facebook_url || '', content.tiktok_url || ''], content.logo_url)} />
+        <JsonLd data={businessGraph([content.instagram_url || '', content.facebook_url || '', content.tiktok_url || ''])} />
         {children}
         <Footer content={content} products={products} />
       </body>
