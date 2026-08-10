@@ -19,8 +19,8 @@ export function JsonLd({ data }: { data: Record<string, unknown> | Array<Record<
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
 }
 
-export function businessGraph(socialLinks: string[] = [], logoUrl?: string) {
-  const searchLogo = logoUrl || absoluteUrl('/snohomish-logo.svg');
+export function businessGraph(socialLinks: string[] = []) {
+  const searchLogo = absoluteUrl('/the-snohomish-logo.svg');
   return {
   '@context': 'https://schema.org',
   '@graph': [
@@ -30,7 +30,7 @@ export function businessGraph(socialLinks: string[] = [], logoUrl?: string) {
       name: SITE_NAME,
       url: SITE_URL,
       description: DEFAULT_DESCRIPTION,
-      logo: { '@type': 'ImageObject', url: searchLogo, width: 200, height: 320 },
+      logo: { '@type': 'ImageObject', url: searchLogo, width: 1536, height: 1536 },
       image: searchLogo,
       sameAs: socialLinks.filter(Boolean),
     },
@@ -40,7 +40,7 @@ export function businessGraph(socialLinks: string[] = [], logoUrl?: string) {
       name: SITE_NAME,
       url: SITE_URL,
       description: DEFAULT_DESCRIPTION,
-      logo: { '@type': 'ImageObject', url: searchLogo, width: 200, height: 320 },
+      logo: { '@type': 'ImageObject', url: searchLogo, width: 1536, height: 1536 },
       image: searchLogo,
       areaServed: { '@type': 'City', name: 'Nairobi' },
       currenciesAccepted: 'KES',
