@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
+const featuredBrands = ['Dom Pérignon', 'CÎROC', 'Chivas', 'Bombay Sapphire', 'Beefeater London', 'Rémy Martin', 'Tanqueray'];
 const essentialCategories = [
   ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
   ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
@@ -48,7 +49,7 @@ export default async function Home() {
         <div className="glenbrynth-showcase" aria-label="Glenbrynth whisky variants"><img className="glenbrynth-collection-image" src="/glenbrynth-variants.svg" alt="Six Glenbrynth whisky variants"/><div className="glenbrynth-links">{glenbrynth.map(product=><Link href={`/product/${product.slug}`} key={product.id}>{product.name.replace('Glenbrynth ','')}</Link>)}</div><strong>BUY 2<br/><span>GET 1 FREE</span></strong></div>
       </div>
     </section>
-    <div className="partner-marquee" aria-label="The Snohomish retail and trade services"><div className="marquee-track">{[0,1].map(copy=><div className="marquee-group" aria-hidden={copy===1} key={copy}><span>Retail shopping</span><b>•</b><span>Wholesale supply</span><b>•</b><span>Business deliveries</span><b>•</b><span>Bulk orders</span><b>•</b><span>Three Nairobi stores</span><b>•</b></div>)}</div></div>
+    <div className="partner-marquee" aria-label="Featured world brands"><div className="marquee-track">{[0,1].map(copy=><div className="marquee-group" aria-hidden={copy===1} key={copy}>{featuredBrands.map(brand=><span key={brand}>{brand}</span>)}</div>)}</div></div>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{sections.map((section,index)=><ProductRail key={`${section.title}-${index}`} {...section}/>)}</section>
     <section id="wholesale" className="mx-auto grid max-w-7xl gap-4 px-5 py-16 md:grid-cols-2 md:px-8"><div className="audience-card retail category-picker"><p>Retail</p><h2>Choose na category yako.</h2><span>Pick a shelf, start your basket.</span><div className="quick-category-grid">{quickCategories.map(category=><Link href={`/category/${category.slug}`} key={category.id}><div style={'image_url' in category&&category.image_url?{backgroundImage:`url(${category.image_url})`}:undefined}>{category.name.slice(0,2).toUpperCase()}</div><b>{category.name}</b></Link>)}</div><Link href="/shop">See all categories <ArrowRight size={17}/></Link></div><div className="audience-card wholesale"><p>Wholesale</p><Boxes/><h2>Buying for your business?</h2><span>Competitive trade pricing for bars, restaurants, hotels, supermarkets, retailers, events and corporate customers.</span><Link href="/contact?subject=trade-account">Request wholesale pricing <ArrowRight size={17}/></Link></div></section>
