@@ -17,6 +17,10 @@ export const metadata: Metadata = {
 };
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
+const essentialCategories = [
+  ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
+  ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
+].map(([name,slug])=>({id:`essential-${slug}`,name,slug}));
 const benefits = [
   [Truck, 'Fast delivery', 'Nairobi delivery and convenient collection options.'],
   [PackageCheck, 'Authentic products', 'Trusted wines, spirits and beverages sourced through verified distribution channels.'],
@@ -27,6 +31,7 @@ const benefits = [
 export default async function Home() {
   const [categories, banners, products, promotions, content, configuredSections] = await Promise.all([getCategories(), getBanners(), getProducts(), getPromotions(), getSiteContent(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), arrivals = products.filter(p => p.is_new_arrival).sort((a,b)=>Date.parse(b.updated_at||'')-Date.parse(a.updated_at||'')), featured = products.filter(p => p.is_featured);
+  const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
   const sections = (configuredSections.length ? configuredSections.map(section => { const heading=section.heading.toLowerCase(); const selected=section.product_ids?.length?section.product_ids.map(id=>products.find(p=>p.id===id)).filter((p):p is typeof products[number]=>Boolean(p)):heading.includes('new arrival')?arrivals:heading.includes('deal')||heading.includes('featured')||heading.includes('offer')?featured:section.use_best_sellers||heading.includes('top seller')||heading.includes('best seller')?topSellers:section.category_id?products.filter(p=>p.categories?.slug===section.categories?.slug):products; return {title:section.heading,products:selected,href:`/collections/${stableCollectionSlug(section)||'featured'}`,limit:section.item_limit}; }):[{title:'Deals of the Day',products:featured,href:'/offers',limit:8},{title:'Top Sellers',products:topSellers,href:'/collections/top-sellers',limit:8},{title:'New Arrivals',products:arrivals,href:'/collections/new-arrivals',limit:8}]).filter(s=>s.products.length);
   const heroImage = banners[0]?.image_url;
   return <main>
@@ -37,10 +42,10 @@ export default async function Home() {
       </div>
     </section>
     <div className="partner-marquee" aria-label="The Snohomish retail and trade services"><div className="marquee-track">{[0,1].map(copy=><div className="marquee-group" aria-hidden={copy===1} key={copy}><span>Retail shopping</span><b>•</b><span>Wholesale supply</span><b>•</b><span>Business deliveries</span><b>•</b><span>Bulk orders</span><b>•</b><span>Three Nairobi stores</span><b>•</b></div>)}</div></div>
-    <section id="categories" className="category-atlas">
-      <div className="mx-auto max-w-7xl px-5 py-16 md:px-8 md:py-24">
-        <div className="category-atlas-heading"><div><p className="eyebrow">The complete drinks atlas</p><h2>Every category.<br/><em>One destination.</em></h2></div><div className="category-atlas-intro"><span>{String(categories.length).padStart(2,'0')}</span><p>Explore our full collection—from celebration bottles and classic spirits to beers, mixers, soft drinks and snacks.</p><Link href="/shop">Browse all products <ArrowRight size={17}/></Link></div></div>
-        <div className="category-atlas-grid">{categories.map((category,index)=>{const parent=categories.find(item=>item.id===category.parent_id);const count=products.filter(product=>product.categories?.slug===category.slug).length;return <Link href={`/category/${category.slug}`} key={category.id} className="category-atlas-card"><div className="category-atlas-image" style={category.image_url?{backgroundImage:`url(${category.image_url})`}:undefined}/><div className="category-atlas-number">{String(index+1).padStart(2,'0')}</div><div className="category-atlas-copy"><small>{parent?.name||'Department'} · {count} {count===1?'product':'products'}</small><h3>{category.name}</h3><span>Explore <ArrowRight size={15}/></span></div></Link>})}</div>
+    <section id="categories" className="category-directory">
+      <div className="px-5 py-12 md:px-8 md:py-16">
+        <div className="category-directory-heading"><div><p>Find your favourite</p><h2>Shop all categories</h2></div><Link href="/shop">View every product <ArrowRight size={17}/></Link></div>
+        <div className="category-directory-grid">{allCategories.map((category,index)=>{const count=products.filter(product=>product.categories?.slug===category.slug).length;return <Link href={`/category/${category.slug}`} key={category.id} className="category-directory-card"><div className="category-directory-art" style={'image_url' in category&&category.image_url?{backgroundImage:`url(${category.image_url})`}:undefined}><b>{category.name.slice(0,2).toUpperCase()}</b></div><div><small>{count?`${count} ${count===1?'product':'products'}`:'Browse collection'}</small><h3>{category.name}</h3></div><span><ArrowRight size={17}/></span><i>{String(index+1).padStart(2,'0')}</i></Link>})}</div>
       </div>
     </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
