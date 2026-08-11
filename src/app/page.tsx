@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { ProductRail } from '@/components/Site';
 import { getCategories, getProducts, getPromotions, money } from '@/lib/supabase';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
-import { ArrowRight, Boxes, Building2, CarFront, Check, Clock3, PackageCheck, Store, Truck } from 'lucide-react';
+import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -24,13 +24,6 @@ const categoryFallbackPositions: Record<string,string> = {
   wine:'18% center',whisky:'70% center',gin:'82% center',vodka:'42% center',tequila:'58% center',rum:'62% center',brandy:'76% center',liqueur:'36% center',
   beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
 };
-const benefits = [
-  [Truck, 'Fast delivery', 'Nairobi delivery and convenient collection options.'],
-  [PackageCheck, 'Authentic products', 'Trusted wines, spirits and beverages sourced through verified distribution channels.'],
-  [Boxes, 'Retail + wholesale', 'Shop one bottle or supply your entire business.'],
-  [Building2, 'Competitive pricing', 'Retail offers, wholesale pricing and volume opportunities.'],
-] as const;
-
 export default async function Home() {
   const [categories, products, promotions] = await Promise.all([getCategories(), getProducts(), getPromotions()]);
   const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
@@ -54,7 +47,6 @@ export default async function Home() {
     </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{homepageRows.map(section=><ProductRail key={section.title} {...section}/>)}</section>
-    <section className="mx-auto grid max-w-7xl gap-4 px-5 py-16 sm:grid-cols-2 lg:grid-cols-4 md:px-8">{benefits.map(([Icon,title,copy])=><article className="benefit-card" key={title}><Icon/><h3>{title}</h3><p>{copy}</p></article>)}</section>
     <section className="wholesale-cta"><div><p className="eyebrow">Trade & corporate supply</p><h2>Need stock for your business?</h2><p>We supply bars, restaurants, hotels, liquor stores, supermarkets, events and corporate customers.</p><ul>{['Bulk ordering','Trade pricing','Volume opportunities','Business deliveries','Account support'].map(x=><li key={x}><Check size={16}/>{x}</li>)}</ul><div className="mt-8 flex flex-wrap gap-3"><Link className="sno-button" href="/contact?subject=price-list">Request price list</Link><Link className="sno-button-outline" href="/contact?subject=wholesale">Contact wholesale team</Link></div></div></section>
     <section id="stores" className="footer-experiences"><div className="footer-experiences-heading"><div><p>Visit & collect</p><h2>The Snohomish, closer to you.</h2></div><span>Swipe to explore <ArrowRight size={16}/></span></div><div className="footer-experiences-track"><Link id="mega-drive-through" href="/about#mega-drive-through" className="experience-card mega"><div><span className="coming-badge">Coming soon</span><CarFront/></div><small>Fast collection · Bulk orders</small><h3>Mega Drive-Through</h3><p>A faster new way to collect retail and wholesale orders.</p><b>Discover the drive-through <ArrowRight size={16}/></b></Link>{stores.map((name,index)=><Link href="/shop" className="experience-card store" key={name}><div><span>0{index+1}</span><Store/></div><small>Retail location</small><h3>{name}</h3><p><Clock3 size={14}/> Store information coming soon</p><b>Shop this store <ArrowRight size={16}/></b></Link>)}</div></section>
   </main>;
