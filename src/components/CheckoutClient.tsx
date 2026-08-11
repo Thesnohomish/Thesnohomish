@@ -69,7 +69,9 @@ export function CheckoutClient({ settings, bands }: { settings: CheckoutSettings
       }
     };
     void supabase.auth.getUser().then(({ data }) => void applyUser(data.user));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => void applyUser(session?.user || null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      window.setTimeout(() => void applyUser(session?.user || null), 0);
+    });
     return () => { active = false; listener.subscription.unsubscribe(); };
   }, []);
   async function continueWithGoogle() {
