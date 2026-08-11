@@ -83,17 +83,19 @@ export default function AdminPage() {
     setLoading(true);
     setError('');
     try {
-      const cleanEmail = email.trim();
+      const cleanEmail = email
+        .replace(/^\[(.*?)\]\(mailto\\?:.*?\)$/i, '$1')
+        .trim();
       console.log('AUTH DEBUG', {
         email: cleanEmail,
         passwordLength: password.length,
-        supabaseHost: new URL(getBrowserSupabaseConfig().url).hostname,
+        supabaseHost: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname,
       });
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password: password,
       });
-      if (authError) throw authError;
+      if (error) throw error;
       if (!data.session || !data.user) throw new Error('Supabase did not return an authenticated session');
       const isAdmin = await verifyAdmin(data.user.id);
       if (!isAdmin) {
