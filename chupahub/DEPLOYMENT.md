@@ -21,8 +21,9 @@ on conflict (user_id) do update set email = excluded.email, role = 'admin', is_a
 
 Import the repository with the Vercel root directory set to the repository root. Add:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`, or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`, or the integration-provided `SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `SUPABASE_PUBLISHABLE_KEY`, or `SUPABASE_ANON_KEY`
 
 Do **not** add a Supabase service-role or secret key. Build with `npm run build` and deploy.
 
