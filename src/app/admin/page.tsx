@@ -25,6 +25,15 @@ export default function AdminPage() {
   const [product, setProduct] = useState<Record<string, unknown>>(defaultProduct), [variant, setVariant] = useState<Record<string, unknown>>({ name: '', price: '', stock: '0', is_active: true });
   const [editingProduct, setEditingProduct] = useState<string | null>(null), [editingCategory, setEditingCategory] = useState<Category | null>(null), [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [notice, setNotice] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState(''), [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const verifyAdmin = useCallback(async (userId: string) => {
+    if (!supabase) return false;
+    const { data, error: accessError } = await supabase.from('admin_users').select('user_id').eq('user_id', userId).eq('is_active', true).maybeSingle();
+    if (accessError) throw new Error(`Administrator access could not be verified: ${accessError.message}`);
+    return Boolean(data);
+  }, [supabase]);
 
   const check = useCallback(async () => {
     if (!supabase) { setReady(true); return; }
@@ -32,16 +41,16 @@ export default function AdminPage() {
       const { data: { session } } = await supabase.auth.getSession();
       setSignedIn(Boolean(session));
       if (!session) { setAllowed(false); return; }
-      const { data, error: accessError } = await supabase.rpc('current_admin');
-      setAllowed(!accessError && Boolean(Array.isArray(data) ? data[0] : data));
-      if (accessError) setError(`Admin access could not be verified: ${accessError.message}`);
+      const isAdmin = await verifyAdmin(session.user.id);
+      setAllowed(isAdmin);
+      if (!isAdmin) setError('Your account is authenticated but does not have administrator access.');
     } catch (cause) {
       setAllowed(false);
       setError(`Supabase connection error: ${cause instanceof Error ? cause.message : 'Unable to contact the configured project.'}`);
     } finally {
       setReady(true);
     }
-  }, [supabase]);
+  }, [supabase, verifyAdmin]);
   const load = useCallback(async () => {
     if (!supabase || !allowed) return;
     try {
@@ -67,7 +76,48 @@ export default function AdminPage() {
   }, [supabase, allowed]);
   useEffect(() => { void check(); }, [check]);
   useEffect(() => { void load(); }, [load]);
-  async function login(e: FormEvent<HTMLFormElement>) { e.preventDefault(); if (!supabase) return; setBusy(true); setError(''); const fd = new FormData(e.currentTarget); const { error: authError } = await supabase.auth.signInWithPassword({ email: String(fd.get('email')), password: String(fd.get('password')) }); if (authError) setError(authError.message); else await check(); setBusy(false); }
+  async function login(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!supabase) return;
+    setLoading(true);
+    setError('');
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (authError) throw authError;
+      if (!data.session || !data.user) throw new Error('Supabase did not return an authenticated session');
+      const isAdmin = await verifyAdmin(data.user.id);
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        setSignedIn(false);
+        setAllowed(false);
+        throw new Error('Your account is authenticated but does not have administrator access.');
+      }
+      setSignedIn(true);
+      setAllowed(true);
+      setReady(true);
+    } catch (cause) {
+      console.error('Admin login failed:', cause);
+      setError(cause instanceof Error ? cause.message : 'Admin login failed.');
+    } finally {
+      setLoading(false);
+    }
+  }
+  async function forgotPassword() {
+    if (!supabase) return;
+    if (!email.trim()) { setError('Enter your email address first.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/admin/reset-password` });
+      if (resetError) throw resetError;
+      setNotice('Password reset instructions have been sent to your email address.');
+    } catch (cause) {
+      console.error('Admin password reset failed:', cause);
+      setError(cause instanceof Error ? cause.message : 'Password reset could not be started.');
+    } finally {
+      setLoading(false);
+    }
+  }
   async function upload(file: File, bucket: 'product-images'|'category-images'|'banner-images') { if (!supabase) return ''; const processed = await processAdminImage(file); const id = crypto.randomUUID(); const path = `admin/${id}-${processed.full.name}`; const thumbnailPath = `admin/${id}-${processed.thumbnail.name}`; const { error: uploadError } = await supabase.storage.from(bucket).upload(path, processed.full, { contentType: 'image/webp', upsert: false }); if (uploadError) throw uploadError; const { error: thumbnailError } = await supabase.storage.from(bucket).upload(thumbnailPath, processed.thumbnail, { contentType: 'image/webp', upsert: false }); if (thumbnailError) { await supabase.storage.from(bucket).remove([path]); throw thumbnailError; } const publicUrl = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl; const check = await fetch(publicUrl, { method: 'HEAD' }); if (!check.ok || !check.headers.get('content-type')?.startsWith('image/')) { await supabase.storage.from(bucket).remove([path, thumbnailPath]); throw new Error('The uploaded image could not be verified.'); } return publicUrl; }
   async function saveProduct(e: FormEvent<HTMLFormElement>) { e.preventDefault(); if (!supabase) return; setBusy(true); setError(''); try { const name = String(product.name || '').trim(); if (!name || !product.price) throw new Error('Product name and price are required.'); const payload = { name, slug: slugify(name), description: String(product.description || '') || null, tasting_notes: String(product.tasting_notes || '') || null, pairing_suggestions: String(product.pairing_suggestions || '') || null, country: String(product.country || '') || null, bottle_size: String(product.bottle_size || '') || null, grape_variety: String(product.grape_variety || '') || null, wine_type: String(product.wine_type || '') || null, sweetness: String(product.sweetness || '') || null, whisky_type: String(product.whisky_type || '') || null, age_statement: String(product.age_statement || '') || null, beer_type: String(product.beer_type || '') || null, pack_size: String(product.pack_size || '') || null, product_format: String(product.product_format || '') || null, gin_style: String(product.gin_style || '') || null, flavour: String(product.flavour || '') || null, abv: product.abv === '' ? null : Number(product.abv), stock: Number(product.stock || 0), low_stock_threshold: Number(product.low_stock_threshold || 5), image_url: String(product.image_url || '') || null, gallery_urls: Array.isArray(product.gallery_urls) ? product.gallery_urls : [], price: Number(product.price), category_id: String(product.category_id || '') || null, is_active: Boolean(product.is_active) }; const q = editingProduct ? supabase.from('products').update(payload).eq('id', editingProduct) : supabase.from('products').insert(payload); const { error: saveError } = await q; if (saveError) throw saveError; setNotice('Product saved. It is live immediately when available is on.'); setProduct(defaultProduct); setEditingProduct(null); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to save product.'); } finally { setBusy(false); } }
   async function editProduct(item: Product) { if (!supabase) return; setEditingProduct(item.id); setProduct({ ...item, abv: item.abv ?? '', category_id: item.category_id ?? '', image_url: item.image_url ?? '' }); const { data } = await supabase.from('product_variants').select('id,product_id,name,price,stock,is_active,image_url').eq('product_id', item.id).order('sort_order'); setVariants((data || []) as Variant[]); setPage('products'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -78,9 +128,9 @@ export default function AdminPage() {
   async function saveSiteContent(e: FormEvent<HTMLFormElement>) { e.preventDefault(); if (!supabase) return; const fd = new FormData(e.currentTarget); const fields = ['logo_url','about','privacy','terms','contact_phone','contact_email','header_notice','footer_text','footer_shop_title','footer_help_title','footer_contact_title','copyright_text','instagram_url','facebook_url','tiktok_url','whatsapp_url','journal_title','journal_intro','article_title','article_summary','article_body']; const value = Object.fromEntries(fields.map(key => [key, String(fd.get(key) || '')])); const { error: saveError } = await supabase.from('store_settings').upsert({ key: 'site_content', value, description: 'Editable branding, footer, social links, journal and SEO article content', is_public: true }); if (saveError) setError(saveError.message); else { setSiteContent(value); setNotice('Website branding and content saved and published.'); } }
   async function saveBanner(e: FormEvent<HTMLFormElement>) { e.preventDefault(); if (!supabase) return; const form = new FormData(e.currentTarget), title = String(form.get('title') || '').trim(); const payload = { title, subtitle: String(form.get('subtitle') || '') || null, image_url: String(form.get('image_url') || '') || null, button_label: String(form.get('button_label') || '') || null, button_url: String(form.get('button_url') || '') || null, is_active: form.get('is_active') === 'on', sort_order: Number(form.get('sort_order') || 0) }; const { error: saveError } = editingBanner ? await supabase.from('homepage_banners').update(payload).eq('id', editingBanner.id) : await supabase.from('homepage_banners').insert(payload); if (saveError) setError(saveError.message); else { setEditingBanner(null); setNotice('Homepage banner saved and published.'); await load(); } }
   async function remove(table: string, id: string, label: string) { if (!supabase || !confirm(`Delete ${label}? This cannot be undone.`)) return; const { error: deleteError } = await supabase.from(table).delete().eq('id', id); if (deleteError) setError(deleteError.message); else { setNotice('Deleted.'); await load(); } }
-  if (!supabase) return <Notice title="Supabase setup required" detail="Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in the existing Vercel project." />;
+  if (!supabase) return <Notice title="Supabase setup required" detail="Reconnect the existing Supabase integration or add its public URL and publishable key to this Vercel project." />;
   if (!ready) return <main className="p-16 text-center font-bold">Loading secure admin…</main>;
-  if (!signedIn) return <main className="mx-auto max-w-md px-4 py-16"><div className="rounded-3xl bg-white p-7 shadow-card"><div className="h-24 w-20" aria-label="Logo space awaiting an admin upload"/><h1 className="mt-4 text-3xl font-black">The Snohomish Admin</h1><p className="mt-2 text-neutral-600">Sign in to manage your live store.</p><form onSubmit={login} className="mt-6 grid gap-3"><input name="email" type="email" defaultValue="Evancekirigia@gmail.com" autoComplete="username" className="rounded-xl border p-3" required /><input name="password" type="password" autoComplete="current-password" placeholder="Password" className="rounded-xl border p-3" required /><button disabled={busy} className="orange-gradient rounded-xl p-3 font-black text-white">{busy ? 'Signing in…' : 'Sign in'}</button>{error && <p className="text-sm text-red-600">{error}</p>}</form></div></main>;
+  if (!signedIn) return <main className="mx-auto max-w-md px-4 py-16"><div className="rounded-3xl bg-white p-7 shadow-card"><div className="h-24 w-20" aria-label="Logo space awaiting an admin upload"/><h1 className="mt-4 text-3xl font-black">The Snohomish Admin</h1><p className="mt-2 text-neutral-600">Sign in to manage your live store.</p><form onSubmit={login} className="mt-6 grid gap-3"><input name="email" type="email" value={email} onChange={event=>setEmail(event.target.value)} autoComplete="username" placeholder="Email address" className="rounded-xl border p-3" required /><input name="password" type="password" value={password} onChange={event=>setPassword(event.target.value)} autoComplete="current-password" placeholder="Password" className="rounded-xl border p-3" required /><button disabled={loading} className="orange-gradient rounded-xl p-3 font-black text-white">{loading ? 'Signing in…' : 'Sign in'}</button><button type="button" disabled={loading} onClick={()=>void forgotPassword()} className="text-sm font-bold text-brand-deep underline">Forgot password?</button>{notice && <p className="text-sm font-bold text-green-700">{notice}</p>}{error && <p role="alert" className="text-sm text-red-600">{error}</p>}</form></div></main>;
   if (!allowed) return <Notice title="Administrator access required" detail={error || 'Ask an existing administrator to add your Supabase Auth account to public.admin_users.'} />;
   const nav: [Page, string, typeof LayoutDashboard][] = [['dashboard','Overview',LayoutDashboard],['products','Products',Package],['discounts','Discounts',Tag],['categories','Categories',Tag],['homepage','Homepage rows',LayoutDashboard],['website','Website content',PanelTop],['delivery','Delivery & payments',Truck]];
   return <main className="min-h-screen bg-[#fffaf6] p-3 lg:p-6"><header className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl bg-brand-ink p-4 text-white"><div><h1 className="text-xl font-black">The Snohomish Admin</h1><p className="text-xs text-white/70">Simple tools for your live store</p></div><button onClick={() => void supabase.auth.signOut()} className="rounded-xl bg-white/10 p-3" aria-label="Sign out"><LogOut size={18}/></button></header><div className="mx-auto mt-4 grid max-w-7xl gap-4 lg:grid-cols-[220px_1fr]"><aside className="flex gap-2 overflow-x-auto rounded-2xl bg-white p-2 shadow-card lg:block">{nav.map(([key,label,Icon]) => <button key={key} onClick={() => setPage(key)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-left font-bold lg:mb-1 lg:w-full ${page === key ? 'bg-brand-deep text-white' : 'hover:bg-orange-50'}`}><Icon size={18}/>{label}</button>)}<LiveOrdersNav /></aside><section className="min-w-0 rounded-2xl bg-white p-4 shadow-card sm:p-6">{notice && <p className="mb-4 rounded-xl bg-green-50 p-3 font-bold text-green-800">{notice}</p>}{error && <p className="mb-4 rounded-xl bg-red-50 p-3 font-bold text-red-700">{error}</p>}{page === 'dashboard' && <Dashboard products={products} categories={categories} banners={banners} onPage={setPage}/>} {page === 'products' && <ProductManager product={product} setProduct={setProduct} categories={categories} editing={Boolean(editingProduct)} variants={variants} variant={variant} setVariant={setVariant} busy={busy} onSubmit={saveProduct} onVariant={saveVariant} onEdit={editProduct} products={products} onVariantToggle={setVariantAvailability} onVariantDelete={deleteVariant} onDelete={(id: string,name: string) => void remove('products',id,name)} onUpload={async (file: File) => { try { const url = await upload(file,'product-images'); setProduct((v: Record<string, unknown>) => ({...v,image_url: url})); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Image upload failed.'); } }} />} {page === 'discounts' && <DiscountManager />} {page === 'categories' && <CategoryManager categories={categories} editing={editingCategory} onEdit={setEditingCategory} onSave={saveCategory} onUpload={(file: File) => upload(file,'category-images')} onDelete={(id: string,name: string) => void remove('categories',id,name)} />} {page === 'homepage' && <HomepageSectionsManager sections={sections} categories={categories} products={products} onReload={load} />} {page === 'website' && <WebsiteManager banners={banners} editing={editingBanner} content={siteContent} categories={categories} onContentSave={saveSiteContent} onEdit={setEditingBanner} onSave={saveBanner} onDelete={(id: string,name: string) => void remove('homepage_banners',id,name)} onUpload={(file: File) => upload(file,'banner-images')} />} {page === 'delivery' && <DeliveryManager />}</section></div></main>;

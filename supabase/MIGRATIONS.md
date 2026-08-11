@@ -86,9 +86,10 @@ Vercel must use the repository root as its root directory (the root
 `vercel.json` routing configuration) and have the following Production
 environment variables from the same Supabase project:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- exactly one of `NEXT_PUBLIC_SUPABASE_ANON_KEY` or
-  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL` or the integration-provided `SUPABASE_URL`
+- one public key: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, or
+  `SUPABASE_ANON_KEY`
 
 After redeployment, verify `/`, `/admin`, a product page, and `/checkout` on
 the production URL. Confirm the public URL's project reference matches the

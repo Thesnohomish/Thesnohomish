@@ -4,6 +4,7 @@ import { Footer, Header } from '@/components/Site';
 import { CartFeedback } from '@/components/CartFeedback';
 import { getProducts, getSiteContent } from '@/lib/supabase';
 import { businessGraph, DEFAULT_DESCRIPTION, JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
+import { getSupabaseConfig, serializeSupabaseConfig } from '@/lib/supabase-config';
 
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -50,9 +51,10 @@ export function generateMetadata(): Metadata {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [content, products] = await Promise.all([getSiteContent(), getProducts()]);
+  const publicSupabaseConfig = serializeSupabaseConfig(getSupabaseConfig());
   return (
     <html lang="en">
-      <head />
+      <head><script dangerouslySetInnerHTML={{ __html: `window.__SNOHOMISH_SUPABASE__=${publicSupabaseConfig}` }} /></head>
       <body className="app-shell min-h-screen">
         <Header content={content} products={products} />
         <CartFeedback />
