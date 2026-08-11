@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { authCookieNames, authCookieOptions, chunkAuthCookie, readChunkedAuthCookie } from './supabase-auth-storage';
-import { supabasePublicKey, supabaseUrl } from './supabase';
+import { getBrowserSupabaseConfig } from './supabase-config';
 
 // Database types can be generated and substituted here after linking the production project.
 // Until then, authorization is enforced by Supabase RLS rather than client-side table typing.
@@ -19,6 +19,7 @@ function cookieSuffix() {
 }
 
 export function createBrowserSupabase() {
+  const { url: supabaseUrl, publicKey: supabasePublicKey } = getBrowserSupabaseConfig();
   if (!supabaseUrl || !supabasePublicKey) return null;
   if (browserClient !== undefined) return browserClient;
   try {

@@ -9,7 +9,7 @@ supabase migration list --linked
 supabase db push
 ```
 
-Set the variables in the root `.env.example` in **Vercel → Project → Settings → Environment Variables**. Only the `NEXT_PUBLIC_SUPABASE_*` values may be exposed to the browser. `SUPABASE_SERVICE_ROLE_KEY`, Daraja, email, SMS, WhatsApp, and Google secrets are server-only values.
+The existing Vercel/Supabase integration supplies the project URL and a public publishable/anon key. Those two public values may be exposed to the browser. `SUPABASE_SERVICE_ROLE_KEY`, Supabase secret keys, Daraja, email, SMS, WhatsApp, and Google secrets are server-only values.
 
 ## M-Pesa Daraja
 
@@ -29,9 +29,9 @@ In Supabase Auth, enable Email and Google, set the **Site URL** to `https://chup
 - `https://*.vercel.app/auth/callback`
 - `http://localhost:3000/auth/callback` (development only)
 
-Create the Google OAuth client in Google Cloud Console and use **Supabase's provider callback URL** as its authorized redirect URI: `https://zoiafygddwqwjqvaahtb.supabase.co/auth/v1/callback`. Do not add a Chupa Hub `/auth/callback` URL to Google Cloud; those application callback URLs belong in Supabase's redirect allow list. Place the Google client ID and secret only in the Supabase Google provider settings.
+Create the Google OAuth client in Google Cloud Console and use **Supabase's provider callback URL** from the existing project's authentication settings as its authorized redirect URI (`SUPABASE_URL` followed by `/auth/v1/callback`). Do not add a Chupa Hub `/auth/callback` URL to Google Cloud; those application callback URLs belong in Supabase's redirect allow list. Place the Google client ID and secret only in the Supabase Google provider settings.
 
-Vercel's `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must both belong to that same Supabase project. Remove old credentials from every Vercel environment before redeploying. Never expose the service-role key in a `NEXT_PUBLIC_` variable.
+The resolved public Supabase URL and publishable/anon key must both belong to that same Supabase project. Remove old credentials from every Vercel environment before redeploying. Never expose a service-role or secret key through a public variable.
 
 ## Notifications
 
