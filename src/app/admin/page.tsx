@@ -8,6 +8,7 @@ import { LiveOrdersNav } from '@/components/admin/LiveOrdersNav';
 import { stableCollectionSlug } from '@/lib/public-urls';
 import type { SiteContent } from '@/lib/supabase';
 import { defaultBrandPartners, type BrandPartner } from '@/lib/brand-partners';
+import { getBrowserSupabaseConfig } from '@/lib/supabase-config';
 
 type Category = { id: string; name: string; slug: string; image_url?: string; is_active: boolean };
 type Product = { id: string; name: string; slug: string; description?: string; tasting_notes?: string; pairing_suggestions?: string; country?: string; bottle_size?: string; grape_variety?: string; wine_type?: string; sweetness?: string; whisky_type?: string; age_statement?: string; beer_type?: string; pack_size?: string; product_format?: string; gin_style?: string; flavour?: string; stock?: number; low_stock_threshold?: number; image_url?: string; gallery_urls?: string[]; abv?: number; price: number; category_id?: string; is_active: boolean; categories?: { name: string }[] | { name: string } | null };
@@ -82,7 +83,16 @@ export default function AdminPage() {
     setLoading(true);
     setError('');
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const cleanEmail = email.trim();
+      console.log('AUTH DEBUG', {
+        email: cleanEmail,
+        passwordLength: password.length,
+        supabaseHost: new URL(getBrowserSupabaseConfig().url).hostname,
+      });
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: password,
+      });
       if (authError) throw authError;
       if (!data.session || !data.user) throw new Error('Supabase did not return an authenticated session');
       const isAdmin = await verifyAdmin(data.user.id);
@@ -104,11 +114,12 @@ export default function AdminPage() {
   }
   async function forgotPassword() {
     if (!supabase) return;
-    if (!email.trim()) { setError('Enter your email address first.'); return; }
     setLoading(true);
     setError('');
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/admin/reset-password` });
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail('evancekirigia@gmail.com', {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      });
       if (resetError) throw resetError;
       setNotice('Password reset instructions have been sent to your email address.');
     } catch (cause) {
