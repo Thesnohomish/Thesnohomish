@@ -8,6 +8,7 @@ import { LiveOrdersNav } from '@/components/admin/LiveOrdersNav';
 import { stableCollectionSlug } from '@/lib/public-urls';
 import type { SiteContent } from '@/lib/supabase';
 import { defaultBrandPartners, type BrandPartner } from '@/lib/brand-partners';
+import { getBrowserSupabaseConfig } from '@/lib/supabase-config';
 
 type Category = { id: string; name: string; slug: string; image_url?: string; is_active: boolean };
 type Product = { id: string; name: string; slug: string; description?: string; tasting_notes?: string; pairing_suggestions?: string; country?: string; bottle_size?: string; grape_variety?: string; wine_type?: string; sweetness?: string; whisky_type?: string; age_statement?: string; beer_type?: string; pack_size?: string; product_format?: string; gin_style?: string; flavour?: string; stock?: number; low_stock_threshold?: number; image_url?: string; gallery_urls?: string[]; abv?: number; price: number; category_id?: string; is_active: boolean; categories?: { name: string }[] | { name: string } | null };
