@@ -18,6 +18,7 @@ type HomepageSection = { id: string; heading: string; category_id?: string; prod
 type Page = 'dashboard'|'products'|'discounts'|'categories'|'homepage'|'website'|'delivery'|'rewards';
 const defaultProduct = { name: '', description: '', tasting_notes: '', pairing_suggestions: '', country: '', bottle_size: '', grape_variety: '', wine_type: '', sweetness: '', whisky_type: '', age_statement: '', beer_type: '', pack_size: '', product_format: '', gin_style: '', flavour: '', abv: '', stock: '0', low_stock_threshold: '5', image_url: '', gallery_urls: [], price: '', category_id: '', is_active: true };
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+const normalizeEmail = (value: string) => value.replace(/^\[(.*?)\]\(mailto\\?:.*?\)$/i, '$1').trim().toLowerCase();
 
 export default function AdminPage() {
   const supabase = useMemo(() => createBrowserSupabase(), []);
