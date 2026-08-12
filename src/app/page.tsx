@@ -32,13 +32,10 @@ const essentialCategories = [
   ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
   ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
 ].map(([name,slug])=>({id:`essential-${slug}`,name,slug}));
-const benefits = [
-  [Truck, 'Fast delivery', 'Nairobi delivery and convenient collection options.'],
-  [PackageCheck, 'Authentic products', 'Trusted wines, spirits and beverages sourced through verified distribution channels.'],
-  [Boxes, 'Retail + wholesale', 'Shop one bottle or supply your entire business.'],
-  [Building2, 'Competitive pricing', 'Retail offers, wholesale pricing and volume opportunities.'],
-] as const;
-
+const categoryFallbackPositions: Record<string,string> = {
+  wine:'18% center',whisky:'70% center',gin:'82% center',vodka:'42% center',tequila:'58% center',rum:'62% center',brandy:'76% center',liqueur:'36% center',
+  beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
+};
 export default async function Home() {
   const [categories, products, promotions, configuredSections] = await Promise.all([getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), arrivals = products.filter(p => p.is_new_arrival).sort((a,b)=>Date.parse(b.updated_at||'')-Date.parse(a.updated_at||'')), featured = products.filter(p => p.is_featured);
