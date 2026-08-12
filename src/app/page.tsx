@@ -4,7 +4,7 @@ import { ProductRail } from '@/components/Site';
 import { getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
 import { stableCollectionSlug } from '@/lib/public-urls';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
-import { ArrowRight, Boxes, Building2, CarFront, Check, Clock3, PackageCheck, Store, Truck } from 'lucide-react';
+import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,19 +22,15 @@ const essentialCategories = [
   ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
   ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
 ].map(([name,slug])=>({id:`essential-${slug}`,name,slug}));
-const benefits = [
-  [Truck, 'Fast delivery', 'Nairobi delivery and convenient collection options.'],
-  [PackageCheck, 'Authentic products', 'Trusted wines, spirits and beverages sourced through verified distribution channels.'],
-  [Boxes, 'Retail + wholesale', 'Shop one bottle or supply your entire business.'],
-  [Building2, 'Competitive pricing', 'Retail offers, wholesale pricing and volume opportunities.'],
-] as const;
-
+const categoryFallbackPositions: Record<string,string> = {
+  wine:'18% center',whisky:'70% center',gin:'82% center',vodka:'42% center',tequila:'58% center',rum:'62% center',brandy:'76% center',liqueur:'36% center',
+  beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
+};
 export default async function Home() {
   const [categories, products, promotions, configuredSections] = await Promise.all([getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), arrivals = products.filter(p => p.is_new_arrival).sort((a,b)=>Date.parse(b.updated_at||'')-Date.parse(a.updated_at||'')), featured = products.filter(p => p.is_featured);
   const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
-  const quickCategorySlugs = ['wine','whisky','beer','gin','spirits','champagne'];
-  const quickCategories = quickCategorySlugs.map(slug=>allCategories.find(category=>category.slug===slug)).filter((category):category is typeof allCategories[number]=>Boolean(category));
+  const categoryShowcase = allCategories.map(category=>({category,image:('image_url' in category&&category.image_url)||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg',position:categoryFallbackPositions[category.slug]||'center'}));
   const discounted = products.filter(product=>Boolean(product.old_price)||(product.product_variants||[]).some(variant=>Boolean(variant.old_price)));
   const unique = products.filter(product=>product.is_featured&&!product.is_top_seller);
   const categoryRows = [['Whisky Favourites','whisky'],['Wines We Love','wine'],['Beer & Cider','beer'],['Gin Selection','gin'],['Champagne & Sparkling','champagne']].map(([title,slug])=>({title,products:products.filter(product=>product.categories?.slug===slug),href:`/category/${slug}`,limit:8}));

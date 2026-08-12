@@ -15,11 +15,11 @@ Next.js framework detection without custom routing for `/_next/static` assets.
 Set these variables on the existing Vercel project connected to `www.chupahub.com`:
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY
+NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
 ```
 
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is also supported by the frontend, but `NEXT_PUBLIC_SUPABASE_ANON_KEY` should be present for production because the admin browser client uses Supabase Auth and RLS with the public anon/publishable key only.
+The Vercel integration's `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and legacy public anon-key variants are also supported. The admin browser client uses only the centralized public URL and publishable/anon key with Supabase Auth and RLS.
 
 Never add a Supabase service-role key to Vercel public variables or frontend code.
 
@@ -58,4 +58,4 @@ All writes are protected by Supabase Auth plus RLS policies. The browser uses th
 
 Run `supabase/migrations/20260719120000_simplified_storefront_admin.sql` once in the Supabase SQL Editor before deploying this version. It is additive and safe to rerun: it preserves existing products, customers, orders and categories, links order items to optional product sizes, creates the editable public website-content settings, and adds the automatic-slug safeguard.
 
-No Vercel project or routing change is required for this update. Keep the existing project rooted at this repository with the committed root `vercel.json`, and ensure `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present in its Production environment.
+No Vercel project or routing change is required for this update. Keep the existing project rooted at this repository with the committed root `vercel.json`, and keep its existing Supabase integration connected in the Production environment.
