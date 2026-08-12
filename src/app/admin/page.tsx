@@ -104,7 +104,10 @@ export default function AdminPage() {
       setReady(true);
     } catch (cause) {
       console.error('Admin login failed:', cause);
-      setError(cause instanceof Error ? cause.message : 'Admin login failed.');
+      const message = cause instanceof Error ? cause.message : 'Admin login failed.';
+      setError(message.toLowerCase().includes('invalid login credentials')
+        ? 'Invalid email or password. Use the exact email address registered in Supabase Auth, or request a password reset below.'
+        : message);
     } finally {
       setAuthAction(null);
     }
