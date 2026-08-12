@@ -1,8 +1,8 @@
-# Chupa Hub admin dashboard
+# The Snohomish admin dashboard
 
 The production admin dashboard lives inside the existing Next.js storefront, not in a second Vercel project:
 
-- Production URL: `https://www.chupahub.com/admin`
+- Production URL: `https://thesnohomish.com/admin`
 - Local URL: `http://localhost:3000/admin`
 
 ## Vercel project routing
@@ -12,7 +12,7 @@ Next.js framework detection without custom routing for `/_next/static` assets.
 
 ## Required Vercel environment variables
 
-Set these variables on the existing Vercel project connected to `www.chupahub.com`:
+Set these variables on the existing Vercel project connected to `thesnohomish.com`:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
@@ -41,6 +41,22 @@ set email = excluded.email,
 ```
 
 The password must be managed in Supabase Auth. Do not store it in the repository.
+
+To reset and verify an existing active administrator from a secure operator shell,
+provide the exact Supabase Auth email and the new password through environment
+variables:
+
+```sh
+ADMIN_EMAIL='administrator@example.com' \
+ADMIN_TEMP_PASSWORD='a-new-strong-password' \
+NEXT_PUBLIC_SUPABASE_URL='https://PROJECT.supabase.co' \
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='PUBLISHABLE_KEY' \
+SUPABASE_SERVICE_ROLE_KEY='SERVICE_ROLE_KEY' \
+npm run admin:reset-password
+```
+
+The command refuses to change a password unless the email belongs to an existing
+Supabase Auth user with an active `public.admin_users` record.
 
 ## Admin capabilities
 
