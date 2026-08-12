@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ProductRail } from '@/components/Site';
-import { getCategories, getProducts, getPromotions, money } from '@/lib/supabase';
+import { getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
+import { stableCollectionSlug } from '@/lib/public-urls';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
 import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
+const southAfricanWineBrands = ['Glenbrynth', 'Kanonkop', 'Nederburg', 'Spier', 'Delaire Graff'];
 const essentialCategories = [
   ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
   ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
@@ -25,25 +27,22 @@ const categoryFallbackPositions: Record<string,string> = {
   beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
 };
 export default async function Home() {
-  const [categories, products, promotions] = await Promise.all([getCategories(), getProducts(), getPromotions()]);
-  const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
+  const [categories, products, promotions, configuredSections] = await Promise.all([getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
+  const topSellers = products.filter(p => p.is_top_seller), arrivals = products.filter(p => p.is_new_arrival).sort((a,b)=>Date.parse(b.updated_at||'')-Date.parse(a.updated_at||'')), featured = products.filter(p => p.is_featured);
   const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
   const categoryShowcase = allCategories.map(category=>({category,image:('image_url' in category&&category.image_url)||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg',position:categoryFallbackPositions[category.slug]||'center'}));
   const discounted = products.filter(product=>Boolean(product.old_price)||(product.product_variants||[]).some(variant=>Boolean(variant.old_price)));
-  const topDeals = [...discounted,...featured,...topSellers].filter((product,index,list)=>list.findIndex(item=>item.id===product.id)===index);
-  const homepageRows = [
-    {title:'Top Deals',products:topDeals,href:'/offers'},
-    {title:'Top Whiskies',products:products.filter(product=>product.categories?.slug==='whisky'),href:'/category/whisky'},
-    {title:'Wines We Love',products:products.filter(product=>product.categories?.slug==='wine'),href:'/category/wine'},
-    {title:'Discount Corner',products:discounted,href:'/offers'},
-  ];
+  const unique = products.filter(product=>product.is_featured&&!product.is_top_seller);
+  const categoryRows = [['Whisky Favourites','whisky'],['Wines We Love','wine'],['Beer & Cider','beer'],['Gin Selection','gin'],['Champagne & Sparkling','champagne']].map(([title,slug])=>({title,products:products.filter(product=>product.categories?.slug===slug),href:`/category/${slug}`,limit:8}));
+  const sections = (configuredSections.length ? configuredSections.map(section => { const heading=section.heading.toLowerCase(); const selected=section.product_ids?.length?section.product_ids.map(id=>products.find(p=>p.id===id)).filter((p):p is typeof products[number]=>Boolean(p)):heading.includes('new arrival')?arrivals:heading.includes('flash')?discounted:heading.includes('unique')?unique:heading.includes('deal')||heading.includes('featured')||heading.includes('offer')?featured:section.use_best_sellers||heading.includes('top seller')||heading.includes('best seller')?topSellers:section.category_id?products.filter(p=>p.categories?.slug===section.categories?.slug):products; return {title:section.heading,products:selected,href:`/collections/${stableCollectionSlug(section)||'featured'}`,limit:section.item_limit}; }):categoryRows).filter(s=>s.products.length);
   return <main>
     <section className="premium-banner" aria-label="Premium wines and spirits">
       <Link href="/shop" aria-label="Shop premium wines and spirits"><img src="/premium-spirits-banner.svg" alt="A premium collection of whisky and spirits against a dark green city backdrop"/></Link>
     </section>
-    <section className="alcohol-category-carousel" aria-labelledby="shop-by-category">
-      <div className="alcohol-category-heading"><div><p>Explore the shelves</p><h2 id="shop-by-category">Shop by category</h2></div><Link href="/shop">See all categories <ArrowRight size={17}/></Link></div>
-      <div className="alcohol-category-track">{[0,1].map(copy=><div className="alcohol-category-group" aria-hidden={copy===1} key={copy}>{categoryShowcase.map(({category,image,position})=><Link href={`/category/${category.slug}`} tabIndex={copy===1?-1:undefined} key={category.id}><span className="alcohol-category-image" style={{backgroundImage:`url(${image})`,backgroundPosition:position}}/><b>{category.name}</b></Link>)}</div>)}</div>
+    <section className="featured-brand-wall" aria-labelledby="featured-brands-heading">
+      <h2 id="featured-brands-heading">Featured brands</h2>
+      <div className="featured-brand-art"><img src="/featured-brands-row-one.svg" alt="Grant's, The Glenlivet, Finlandia, Dom Pérignon, Cîroc, Chivas, Bombay Sapphire and Beefeater"/><img src="/featured-brands-row-two.svg" alt="The Balvenie, Moët & Chandon, Johnnie Walker, Jameson, Jägermeister, Jack Daniel's, Hennessy and Grant's"/></div>
+      <div className="south-african-brands" aria-label="Glenbrynth and South African wineries"><span>South African selection</span>{southAfricanWineBrands.map(brand=><Link key={brand} href={`/search?q=${encodeURIComponent(brand)}`}>{brand}</Link>)}</div>
     </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{homepageRows.map(section=><ProductRail key={section.title} {...section}/>)}</section>
