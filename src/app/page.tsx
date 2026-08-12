@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ProductRail } from '@/components/Site';
-import { getCategories, getProducts, getPromotions, money } from '@/lib/supabase';
+import { getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
 import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
@@ -25,18 +25,30 @@ const categoryFallbackPositions: Record<string,string> = {
   beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
 };
 export default async function Home() {
-  const [categories, products, promotions] = await Promise.all([getCategories(), getProducts(), getPromotions()]);
+  const [categories, products, promotions, configuredSections] = await Promise.all([getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
   const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
   const categoryShowcase = allCategories.map(category=>({category,image:('image_url' in category&&category.image_url)||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg',position:categoryFallbackPositions[category.slug]||'center'}));
   const discounted = products.filter(product=>Boolean(product.old_price)||(product.product_variants||[]).some(variant=>Boolean(variant.old_price)));
   const topDeals = [...discounted,...featured,...topSellers].filter((product,index,list)=>list.findIndex(item=>item.id===product.id)===index);
-  const homepageRows = [
+  const fallbackRows = [
     {title:'Top Deals',products:topDeals,href:'/offers'},
     {title:'Top Whiskies',products:products.filter(product=>product.categories?.slug==='whisky'),href:'/category/whisky'},
     {title:'Wines We Love',products:products.filter(product=>product.categories?.slug==='wine'),href:'/category/wine'},
     {title:'Discount Corner',products:discounted,href:'/offers'},
   ];
+  const homepageRows = configuredSections.length ? configuredSections.map(section => ({
+    title: section.heading,
+    products: section.product_ids?.length
+      ? section.product_ids.map(id => products.find(product => product.id === id)).filter((product): product is typeof products[number] => Boolean(product))
+      : section.category_id
+        ? products.filter(product => product.categories?.slug === section.categories?.slug)
+        : section.use_best_sellers
+          ? topSellers
+          : featured,
+    href: section.categories?.slug ? `/category/${section.categories.slug}` : '/shop',
+    limit: section.item_limit,
+  })).filter(section => section.products.length) : fallbackRows;
   return <main>
     <section className="premium-banner" aria-label="Premium wines and spirits">
       <Link href="/shop" aria-label="Shop premium wines and spirits"><img src="/premium-spirits-banner.svg" alt="A premium collection of whisky and spirits against a dark green city backdrop"/></Link>

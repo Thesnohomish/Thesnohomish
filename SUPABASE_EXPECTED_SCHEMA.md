@@ -133,3 +133,120 @@ buckets and update the banner to its Storage public URL, run the server-only
 `npm run supabase:upload-storefront-assets` command with
 `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service-role key
 must never use a `NEXT_PUBLIC_` name or be exposed to browser code.
+
+## Exact high-priority column definitions
+
+### `products`
+
+| Column | SQL type | Null/default |
+|---|---|---|
+| `id` | `uuid` PK | required, `gen_random_uuid()` |
+| `category_id` | `uuid` FK | nullable |
+| `brand_id` | `uuid` FK | nullable |
+| `name` | `text` | required |
+| `slug` | `text` | required, unique |
+| `description`, `short_description` | `text` | nullable |
+| `tasting_notes`, `pairing_suggestions` | `text` | nullable |
+| `country`, `bottle_size`, `grape_variety`, `wine_type`, `sweetness` | `text` | nullable |
+| `whisky_type`, `age_statement`, `beer_type`, `pack_size`, `product_format`, `gin_style`, `flavour` | `text` | nullable |
+| `abv` | `numeric(5,2)` | nullable |
+| `sku`, `barcode` | `text` | nullable; SKU is unique in canonical schema |
+| `price` | `numeric(12,2)` | required, nonnegative |
+| `old_price` | `numeric(12,2)` | nullable |
+| `currency` | `text` | required, default `KES` |
+| `discount_starts_at`, `discount_ends_at` | `timestamptz` | nullable |
+| `discount_label` | `text` | nullable |
+| `stock` | `integer` | required, default 0 |
+| `low_stock_threshold` | `integer` | required, default 5 |
+| `track_inventory` | `boolean` | required, default true |
+| `image_url` | `text` | nullable |
+| `gallery_urls` | `text[]` | required, default empty |
+| `is_featured`, `is_top_seller`, `is_new_arrival` | `boolean` | required, default false |
+| `is_active` | `boolean` | required, default true |
+| `sort_order` | `integer` | required, default 0 |
+| `seo_title`, `seo_description` | `text` | nullable |
+| `metadata` | `jsonb` | required, default `{}` |
+| `created_at`, `updated_at` | `timestamptz` | required, default `now()` |
+
+Indexes/uniques: PK `id`; unique `slug`; canonical unique nullable `sku`;
+indexes on `(category_id)` and `(is_active, sort_order, created_at desc)`.
+
+### `homepage_product_sections`
+
+| Column | SQL type | Null/default |
+|---|---|---|
+| `id` | `uuid` PK | required, generated UUID |
+| `heading` | `text` | required |
+| `category_id` | `uuid` FK | nullable |
+| `product_ids` | `uuid[]` | required, empty array |
+| `use_best_sellers` | `boolean` | required, false |
+| `item_limit` | `integer` | required, 8 |
+| `sort_order` | `integer` | required, 0 |
+| `rotation_enabled` | `boolean` | required, false |
+| `rotation_seconds` | `integer` | required, 6 |
+| `is_active` | `boolean` | required, true |
+| `created_at`, `updated_at` | `timestamptz` | required, `now()` |
+
+Relationship: `category_id -> categories.id ON DELETE SET NULL`. Index on
+`(is_active, sort_order)`. Active rows are public-readable; admin writes only.
+
+### `orders`
+
+| Column group | Columns / SQL types |
+|---|---|
+| Identity | `id uuid` PK; `order_number text` unique; `checkout_token uuid` unique |
+| Owner | `customer_id uuid`; `delivery_location_id uuid` |
+| Customer snapshot | `customer_name text`, `customer_email text`, `customer_phone text` |
+| Delivery | `delivery_address text`, `gps_lat/gps_lng numeric(10,7)`, `delivery_place_id text`, `delivery_place_name text`, `delivery_location_verified boolean default false`, `delivery_instructions text` |
+| Workflow | `status text default pending`, `rider_name text`, `rider_phone text`, `tracking_url text`, `accepted_at`, `processing_at`, `dispatched_at`, `delivered_at`, `cancelled_at` (`timestamptz`) |
+| Payment | `payment_method text default mpesa`, `payment_status text default pending`, `payment_reference text` |
+| Totals | `subtotal numeric(12,2)`, `delivery_fee numeric(10,2)`, `discount_total numeric(10,2)`, `total numeric(12,2)`; required defaults 0 |
+| Notes/time | `gift_note text`, `admin_notes text`, required `created_at/updated_at timestamptz default now()` |
+
+Relationships: customer and delivery location, plus reverse nested relations to
+order items, payments, status history, order notifications, and notification
+deliveries. Indexes: unique non-null order number, unique checkout token, and
+`(customer_id, created_at desc)`.
+
+### `order_items`
+
+`id uuid` PK; required `order_id uuid`, `product_name text`, `quantity integer`,
+`unit_price numeric(12,2)`, `line_total numeric(12,2)`; nullable `product_id uuid`
+and `variant_id uuid`; required `created_at timestamptz default now()`.
+Relationships are order→orders, product→products, and variant→product_variants.
+
+### `categories`
+
+`id uuid` PK; required unique `slug` and required `name`; nullable `parent_id`,
+`icon`, `image_url`, `description`, `color`, `seo_title`, `seo_description`;
+required `sort_order integer default 0`, `is_active boolean default true`, and
+timestamps. `parent_id` self-references categories; products and homepage rows
+reference `categories.id`.
+
+### `admin_users`
+
+`id uuid` PK; required unique `user_id uuid -> auth.users.id`; required unique
+`email text`; required `role text default admin`; required
+`is_active boolean default true`; timestamps. No migration changes existing
+administrator records.
+
+## Complete nested-select relationship inventory
+
+- `products.categories(...)`: `products.category_id -> categories.id`
+- `products.brands(...)`: `products.brand_id -> brands.id`
+- `products.product_variants(...)`: `product_variants.product_id -> products.id`
+- `orders.order_items(...)`: `order_items.order_id -> orders.id`
+- `orders.payments(...)`: `payments.order_id -> orders.id`
+- `orders.order_status_history(...)`: `order_status_history.order_id -> orders.id`
+- `orders.order_notifications(...)`: `order_notifications.order_id -> orders.id`
+- `orders.notification_deliveries(...)`: `notification_deliveries.order_id -> orders.id`
+- `order_items.products(...)`: `order_items.product_id -> products.id`
+- `order_items.orders(...)` / `orders!inner(...)`: `order_items.order_id -> orders.id`
+- `reward_accounts.customers(...)`: `reward_accounts.customer_id -> customers.id`
+- `reward_transactions.reward_accounts(...)`: account FK; nested customer follows the reward account customer FK.
+
+## Migration created but not applied
+
+`supabase/migrations/20260812140000_sync_complete_schema.sql` is the requested
+complete additive migration. It was generated from the repository audit and was
+**not applied to any Supabase project**.
