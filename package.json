@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "admin:reset-password": "node scripts/reset-existing-admin-password.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
