@@ -119,3 +119,17 @@ results; the schema migration fixes the underlying failure rather than hiding it
 5. If the target has a legacy column with an incompatible non-UUID type, inspect
    and migrate it manually; this migration intentionally does not blindly rename
    or destructively cast populated columns.
+
+## Catalogue, homepage rows, and asset upload
+
+`20260812130000_seed_category_products_rows_banner.sql` supplies a conservative
+starter catalogue only where an active category has fewer than five products.
+It uses stable slugs and `ON CONFLICT` handling, preserves all merchant data,
+creates an editable homepage row for every active category, and adds the main
+storefront banner. Apply it after the schema-sync migration.
+
+To copy the committed banner/brand artwork into the existing Supabase Storage
+buckets and update the banner to its Storage public URL, run the server-only
+`npm run supabase:upload-storefront-assets` command with
+`NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service-role key
+must never use a `NEXT_PUBLIC_` name or be exposed to browser code.
