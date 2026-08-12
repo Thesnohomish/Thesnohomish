@@ -42,21 +42,20 @@ set email = excluded.email,
 
 The password must be managed in Supabase Auth. Do not store it in the repository.
 
-To reset and verify an existing active administrator from a secure operator shell,
-provide the exact Supabase Auth email and the new password through environment
-variables:
+To perform the approved one-time reset of the existing administrator from a
+secure operator shell, provide the new password through a server-only environment
+variable:
 
 ```sh
-ADMIN_EMAIL='administrator@example.com' \
 ADMIN_TEMP_PASSWORD='a-new-strong-password' \
-NEXT_PUBLIC_SUPABASE_URL='https://PROJECT.supabase.co' \
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='PUBLISHABLE_KEY' \
+NEXT_PUBLIC_SUPABASE_URL='https://xttdnlqxbtgdspfczsnw.supabase.co' \
 SUPABASE_SERVICE_ROLE_KEY='SERVICE_ROLE_KEY' \
 npm run admin:reset-password
 ```
 
-The command refuses to change a password unless the email belongs to an existing
-Supabase Auth user with an active `public.admin_users` record.
+The command uses only the server-side Admin API, does not read or alter
+`public.admin_users`, verifies the Auth user after updating it, never prints the
+password, and deletes itself after a successful reset so it cannot be reused.
 
 ## Admin capabilities
 
