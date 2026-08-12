@@ -22,9 +22,9 @@ The checkout server recalculates item prices and stock from Supabase and calcula
 
 ## Authentication
 
-In Supabase Auth, enable Email and Google, set the **Site URL** to `https://chupahub.com`, and add these redirect URLs to the Auth configuration:
+In Supabase Auth, enable Email and Google, set the **Site URL** to `https://thesnohomish.com`, and add these redirect URLs to the Auth configuration:
 
-- `https://chupahub.com/auth/callback`
+- `https://thesnohomish.com/auth/callback`
 - `https://www.chupahub.com/auth/callback`
 - `https://*.vercel.app/auth/callback`
 - `http://localhost:3000/auth/callback` (development only)
