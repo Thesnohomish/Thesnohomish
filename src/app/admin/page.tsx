@@ -85,10 +85,9 @@ export default function AdminPage() {
     setError('');
     setNotice('');
     try {
-      const cleanEmail = normalizeEmail(email);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password: password,
+        email: email.trim(),
+        password,
       });
       if (error) throw error;
       if (!data.session || !data.user) throw new Error('Supabase did not return an authenticated session');
@@ -118,13 +117,13 @@ export default function AdminPage() {
     setError('');
     setNotice('');
     try {
-      const cleanEmail = normalizeEmail(email);
-      if (!cleanEmail) throw new Error('Enter your email address before requesting a password reset.');
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      const resetEmail = email.trim();
+      if (!resetEmail) throw new Error('Enter your email address before requesting a password reset.');
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/admin/reset-password`,
       });
       if (resetError) throw resetError;
-      setNotice(`If an account exists for ${cleanEmail}, password reset instructions have been sent.`);
+      setNotice(`If an account exists for ${resetEmail}, password reset instructions have been sent.`);
     } catch (cause) {
       console.error('Admin password reset failed:', cause);
       setError(cause instanceof Error ? cause.message : 'Password reset could not be started.');
