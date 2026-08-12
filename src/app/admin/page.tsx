@@ -28,6 +28,13 @@ export default function AdminPage() {
   const [notice, setNotice] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [email, setEmail] = useState('evancekirigia@gmail.com'), [password, setPassword] = useState('');
 
+  const verifyAdmin = useCallback(async (_userId: string) => {
+    if (!supabase) return false;
+    const { data, error: accessError } = await supabase.rpc('current_admin');
+    if (accessError) throw accessError;
+    return Boolean(Array.isArray(data) ? data[0] : data);
+  }, [supabase]);
+
   const check = useCallback(async () => {
     if (!supabase) { setReady(true); return; }
     try {
