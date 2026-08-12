@@ -7,10 +7,13 @@ import { DEFAULT_DESCRIPTION } from '@/lib/seo';
 import {
   ArrowRight,
   Boxes,
+  Building2,
   CarFront,
   Check,
   Clock3,
+  PackageCheck,
   Store,
+  Truck,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
