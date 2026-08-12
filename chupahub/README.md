@@ -20,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-Set `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never add a service-role or secret key to Vercel's public variables.
+Use the existing Vercel/Supabase integration. The app supports its `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` variables as well as the `NEXT_PUBLIC_SUPABASE_URL` and public publishable/anon-key variants. Never expose a service-role or secret key to the browser.
 
 ## Supabase setup
 

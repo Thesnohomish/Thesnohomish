@@ -1,5 +1,6 @@
-export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-export const supabasePublicKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+import { getSupabaseConfig } from '@/lib/supabase-config';
+
+export const { url: supabaseUrl, publicKey: supabasePublicKey } = getSupabaseConfig();
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabasePublicKey);
 
 export type DbCategory = { id: string; name: string; slug: string; parent_id?: string; icon?: string; image_url?: string; description?: string; color?: string; seo_title?: string; seo_description?: string; sort_order?: number; is_active?: boolean; updated_at?: string };
