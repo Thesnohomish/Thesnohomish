@@ -112,5 +112,3 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden}.app-shell{background:#f
 @media(max-width:640px){.premium-banner img{min-height:220px;object-fit:cover;object-position:64% center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
 
 .hero-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important}
-@keyframes hero-pair-in{from{opacity:.35}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.hero-carousel [class*="hero-pair-in"]{animation:none}}
