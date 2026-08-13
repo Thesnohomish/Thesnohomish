@@ -1,6 +1,3 @@
-'use client';
-
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { DbBanner } from '@/lib/supabase';
