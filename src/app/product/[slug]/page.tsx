@@ -43,7 +43,7 @@ export default async function Product({ params, searchParams }: { params: Promis
     offers: {
       '@type': 'Offer', url: absoluteUrl(productUrl), price: Number(product.price).toFixed(2), priceCurrency: 'KES',
       availability: Number(product.stock || 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/NewCondition', seller: { '@id': 'https://chupahub.com/#organization' },
+      itemCondition: 'https://schema.org/NewCondition', seller: { '@id': 'https://thesnohomish.com/#organization' },
     },
   };
   const availability = (product.product_variants || []).some((variant) => variant.stock > 0) || (!product.product_variants?.length && Number(product.stock || 0) > 0);
