@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { HeroCarousel } from '@/components/HeroCarouselClient';
+import { HeroCarousel } from '@/components/HeroCarousel';
 import { ProductRail } from '@/components/Site';
 import { SmartImage } from '@/components/SmartImage';
 import { getBanners, getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
