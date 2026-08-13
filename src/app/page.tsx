@@ -1,7 +1,8 @@
-import Link from 'next/link';
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { HeroCarousel } from '@/components/HeroCarousel';
 import { ProductRail } from '@/components/Site';
-import { getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
+import { getBanners, getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
 import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
@@ -25,7 +26,7 @@ const categoryFallbackPositions: Record<string,string> = {
   beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
 };
 export default async function Home() {
-  const [categories, products, promotions, configuredSections] = await Promise.all([getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
+  const [banners, categories, products, promotions, configuredSections] = await Promise.all([getBanners(), getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
   const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
   const categoryShowcase = allCategories.map(category=>({category,image:('image_url' in category&&category.image_url)||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg',position:categoryFallbackPositions[category.slug]||'center'}));
@@ -50,9 +51,7 @@ export default async function Home() {
     limit: section.item_limit,
   })).filter(section => section.products.length) : fallbackRows;
   return <main>
-    <section className="premium-banner" aria-label="Premium wines and spirits">
-      <Link href="/shop" aria-label="Shop premium wines and spirits"><img src="/premium-spirits-banner.svg" alt="A premium collection of whisky and spirits against a dark green city backdrop"/></Link>
-    </section>
+    <HeroCarousel banners={banners}/>
     <section className="alcohol-category-carousel" aria-labelledby="shop-by-category">
       <div className="alcohol-category-heading"><div><p>Explore the shelves</p><h2 id="shop-by-category">Shop by category</h2></div><Link href="/shop">See all categories <ArrowRight size={17}/></Link></div>
       <div className="alcohol-category-track">{[0,1].map(copy=><div className="alcohol-category-group" aria-hidden={copy===1} key={copy}>{categoryShowcase.map(({category,image,position})=><Link href={`/category/${category.slug}`} tabIndex={copy===1?-1:undefined} key={category.id}><span className="alcohol-category-image" style={{backgroundImage:`url(${image})`,backgroundPosition:position}}/><b>{category.name}</b></Link>)}</div>)}</div>

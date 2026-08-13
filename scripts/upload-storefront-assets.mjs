@@ -27,7 +27,10 @@ for (const [bucket, path] of assets) {
 
 const { error: bannerError } = await supabase.from('homepage_banners').update({
   image_url: uploaded['premium-spirits-banner.svg'],
-}).eq('id', 'b0000000-0000-4000-8000-000000000201');
+}).in('id', [
+  'b0000000-0000-4000-8000-000000000201',
+  'b0000000-0000-4000-8000-000000000301',
+]);
 if (bannerError) throw bannerError;
 
 console.log(JSON.stringify({ uploaded: Object.keys(uploaded), bannerUpdated: true }, null, 2));
