@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { deliverEmail } from '@/lib/server/resend-email';
 
-const SITE_URL = 'https://chupahub.com';
+const SITE_URL = 'https://thesnohomish.com';
 const MAX_ATTEMPTS = 3;
 
 export type OrderEmailEvent = 'placed' | 'accepted' | 'preparing' | 'dispatched' | 'delivered' | 'cancelled' | 'new_order_admin';
