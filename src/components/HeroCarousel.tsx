@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { DbBanner } from '@/lib/supabase';
 import { SmartImage } from '@/components/SmartImage';
 
+const BANNERS_PER_PAGE = 2;
+
 export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
   const banner = banners[0];
 
