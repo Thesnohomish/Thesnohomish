@@ -165,6 +165,7 @@ must never use a `NEXT_PUBLIC_` name or be exposed to browser code.
 | `is_active` | `boolean` | required, default true |
 | `sort_order` | `integer` | required, default 0 |
 | `seo_title`, `seo_description` | `text` | nullable |
+| `weight_grams` | `integer` | nullable, nonnegative in canonical schema |
 | `metadata` | `jsonb` | required, default `{}` |
 | `created_at`, `updated_at` | `timestamptz` | required, default `now()` |
 
