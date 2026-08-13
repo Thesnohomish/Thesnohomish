@@ -18,3 +18,14 @@ No category or country is inferred: an import row must be assigned later by an
 administrator unless an explicit, unambiguous mapping is supplied. Imports must
 upsert by `slug` or skip an existing slug so current products are never duplicated
 or replaced accidentally.
+
+## Grouped spreadsheet importer
+
+Run `npm run supabase:import-grouped-products` with `PRODUCT_CSV_PATH`,
+`NEXT_PUBLIC_SUPABASE_URL`, and the server-only `SUPABASE_SERVICE_ROLE_KEY`.
+The importer matches `category` (or `category_name`) case-insensitively against
+`public.categories.name` and writes only the resolved UUID to
+`products.category_id`. Rows without a product name, slug, and numeric price are
+treated as grouping headings and skipped. Rows with distinct SKUs or sizes retain
+distinct product slugs, while an existing matching SKU/slug is updated rather
+than duplicated.

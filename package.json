@@ -6,7 +6,8 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "supabase:upload-storefront-assets": "node scripts/upload-storefront-assets.mjs"
+    "supabase:upload-storefront-assets": "node scripts/upload-storefront-assets.mjs",
+    "supabase:import-grouped-products": "node scripts/import-grouped-products.mjs"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.1",

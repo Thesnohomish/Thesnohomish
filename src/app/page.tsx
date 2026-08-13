@@ -53,7 +53,7 @@ export default async function Home() {
   return <main>
     <HeroCarousel banners={banners}/>
     <section className="alcohol-category-carousel" aria-labelledby="shop-by-category">
-      <div className="alcohol-category-heading"><div><p>Explore the shelves</p><h2 id="shop-by-category">Shop by category</h2></div><Link href="/shop">See all categories <ArrowRight size={17}/></Link></div>
+      <div className="alcohol-category-heading"><div><p>Find your favourite</p><h2 id="shop-by-category">Discover drinks by category</h2></div><Link href="/shop">Browse all categories <ArrowRight size={17}/></Link></div>
       <div className="alcohol-category-track">{[0,1].map(copy=><div className="alcohol-category-group" aria-hidden={copy===1} key={copy}>{categoryShowcase.map(({category,image,position})=><Link href={`/category/${category.slug}`} tabIndex={copy===1?-1:undefined} key={category.id}><span className="alcohol-category-image" style={{backgroundImage:`url(${image})`,backgroundPosition:position}}/><b>{category.name}</b></Link>)}</div>)}</div>
     </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
