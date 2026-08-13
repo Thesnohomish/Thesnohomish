@@ -23,7 +23,7 @@ const countries = ['Argentina','Australia','Barbados','Belgium','Brazil','Canada
 export default function AdminPage() {
   const supabase = useMemo(() => createBrowserSupabase(), []);
   const [ready, setReady] = useState(false), [signedIn, setSignedIn] = useState(false), [allowed, setAllowed] = useState(false);
-  const [page, setPage] = useState<Page>('dashboard'), [siteContent, setSiteContent] = useState<SiteContent>({}), [products, setProducts] = useState<Product[]>([]), [categories, setCategories] = useState<Category[]>([]), [banners, setBanners] = useState<Banner[]>([]), [sections, setSections] = useState<HomepageSection[]>([]), [variants, setVariants] = useState<Variant[]>([]);
+  const [page, setPage] = useState<Page>('dashboard'), [siteContent, setSiteContent] = useState<SiteContent>({}), [products, setProducts] = useState<Product[]>([]), [categories, setCategories] = useState<Category[]>([]), [productCategories, setProductCategories] = useState<Category[]>([]), [banners, setBanners] = useState<Banner[]>([]), [sections, setSections] = useState<HomepageSection[]>([]), [variants, setVariants] = useState<Variant[]>([]);
   const [product, setProduct] = useState<Record<string, unknown>>(defaultProduct), [variant, setVariant] = useState<Record<string, unknown>>({ name: '', price: '', stock: '0', is_active: true });
   const [editingProduct, setEditingProduct] = useState<string | null>(null), [editingCategory, setEditingCategory] = useState<Category | null>(null), [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [notice, setNotice] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
