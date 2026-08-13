@@ -17,28 +17,11 @@ export const metadata: Metadata = {
 };
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
-const essentialCategories = [
-  ['Wine','wine'],['Whisky','whisky'],['Gin','gin'],['Vodka','vodka'],['Tequila','tequila'],['Rum','rum'],['Brandy','brandy'],['Liqueur','liqueur'],
-  ['Beer','beer'],['Champagne','champagne'],['Sparkling','sparkling'],['Spirits','spirits'],['Mixers','mixers'],['Soft Drinks','soft-drinks'],['Energy Drinks','energy-drinks'],['Snacks','snacks'],
-].map(([name,slug])=>({id:`essential-${slug}`,name,slug}));
-const categoryFallbackPositions: Record<string,string> = {
-  wine:'18% center',whisky:'70% center',gin:'82% center',vodka:'42% center',tequila:'58% center',rum:'62% center',brandy:'76% center',liqueur:'36% center',
-  beer:'28% center',champagne:'47% center',sparkling:'47% center',spirits:'68% center',mixers:'32% center','soft-drinks':'24% center','energy-drinks':'54% center',snacks:'12% center',
-};
 export default async function Home() {
   const [banners, categories, products, promotions, configuredSections] = await Promise.all([getBanners(), getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
-  const allCategories = [...essentialCategories, ...categories.filter(category=>!essentialCategories.some(item=>item.slug===category.slug))].map(category=>categories.find(item=>item.slug===category.slug)||category);
-  const categoryShowcase = allCategories.map(category=>({category,image:('image_url' in category&&category.image_url)||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg',position:categoryFallbackPositions[category.slug]||'center'}));
-  const discounted = products.filter(product=>Boolean(product.old_price)||(product.product_variants||[]).some(variant=>Boolean(variant.old_price)));
-  const topDeals = [...discounted,...featured,...topSellers].filter((product,index,list)=>list.findIndex(item=>item.id===product.id)===index);
-  const fallbackRows = [
-    {title:'Top Deals',products:topDeals,href:'/offers'},
-    {title:'Top Whiskies',products:products.filter(product=>product.categories?.slug==='whisky'),href:'/category/whisky'},
-    {title:'Wines We Love',products:products.filter(product=>product.categories?.slug==='wine'),href:'/category/wine'},
-    {title:'Discount Corner',products:discounted,href:'/offers'},
-  ];
-  const homepageRows = configuredSections.length ? configuredSections.map(section => ({
+  const categoryShowcase = categories.map(category=>({category,image:category.image_url||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg'}));
+  const homepageRows = configuredSections.map(section => ({
     title: section.heading,
     products: section.product_ids?.length
       ? section.product_ids.map(id => products.find(product => product.id === id)).filter((product): product is typeof products[number] => Boolean(product))
@@ -49,12 +32,12 @@ export default async function Home() {
           : featured,
     href: section.categories?.slug ? `/category/${section.categories.slug}` : '/shop',
     limit: section.item_limit,
-  })).filter(section => section.products.length) : fallbackRows;
+  })).filter(section => section.products.length);
   return <main>
     <HeroCarousel banners={banners}/>
     <section className="alcohol-category-carousel" aria-labelledby="shop-by-category">
       <div className="alcohol-category-heading"><div><p>Find your favourite</p><h2 id="shop-by-category">Discover drinks by category</h2></div><Link href="/shop">Browse all categories <ArrowRight size={17}/></Link></div>
-      <div className="alcohol-category-track">{[0,1].map(copy=><div className="alcohol-category-group" aria-hidden={copy===1} key={copy}>{categoryShowcase.map(({category,image,position})=><Link href={`/category/${category.slug}`} tabIndex={copy===1?-1:undefined} key={category.id}><span className="alcohol-category-image" style={{backgroundImage:`url(${image})`,backgroundPosition:position}}/><b>{category.name}</b></Link>)}</div>)}</div>
+      <div className="alcohol-category-track">{[0,1].map(copy=><div className="alcohol-category-group" aria-hidden={copy===1} key={copy}>{categoryShowcase.map(({category,image})=><Link href={`/category/${category.slug}`} tabIndex={copy===1?-1:undefined} key={category.id}><span className="alcohol-category-image" style={{backgroundImage:`url(${image})`}}/><b>{category.name}</b></Link>)}</div>)}</div>
     </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{homepageRows.map(section=><ProductRail key={section.title} {...section}/>)}</section>
