@@ -62,6 +62,11 @@ body {
   scrollbar-width: thin;
 }
 .product-rail-grid > * { display: block; scroll-snap-align: start; }
+.product-image-container{position:relative;display:flex;width:100%;aspect-ratio:1/1;align-items:center;justify-content:center;overflow:hidden;background:#fff}
+.product-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:12px}
+.product-detail-image{height:clamp(350px,92vw,440px)}
+.product-detail-image .product-image-container{height:100%;aspect-ratio:auto}
+@media(min-width:768px){.product-detail-image{height:min(560px,55vw)}.product-detail-image .product-image{padding:24px}}
 @media (min-width: 640px) { .product-rail-grid { grid-auto-columns: minmax(132px, 21vw); } }
 @media (min-width: 768px) { .product-rail-grid { grid-auto-columns: minmax(138px, 14.5vw); } }
 @media (min-width: 1280px) { .product-rail-grid { grid-auto-columns: minmax(145px, 10vw); } }
@@ -102,6 +107,11 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden}.app-shell{background:#f
 .glenbrynth-collection-image{position:relative;z-index:2;width:min(92%,560px);border:8px solid white;border-radius:24px;background:white;box-shadow:0 24px 55px #0009;image-rendering:auto}.glenbrynth-links{position:absolute;z-index:3;bottom:15px;display:flex;max-width:92%;flex-wrap:wrap;justify-content:center;gap:5px}.glenbrynth-links a{border-radius:999px;background:#111e;padding:5px 8px;color:white;font-size:8px;font-weight:800}.glenbrynth-links a:hover{background:#fff500;color:#111}@media(max-width:500px){.glenbrynth-collection-image{border-width:5px;border-radius:15px}.glenbrynth-links{display:none}}
 
 /* Supplied premium banner and compact partner artwork */
-.premium-banner{overflow:hidden;background:#001d13}.premium-banner a{display:block}.premium-banner img{display:block;width:100%;height:auto;max-height:620px;object-fit:cover;object-position:center}
+.premium-banner{overflow:hidden;background:#001d13}.premium-banner a{display:block;aspect-ratio:12/5}.premium-banner img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
 .featured-brand-wall{border-bottom:1px solid #e8e8e8;background:#fff;padding:18px 20px 20px}.featured-brand-wall>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.featured-brand-art{display:grid;gap:8px;max-width:1280px;margin:auto}.featured-brand-art img{display:block;width:100%;height:64px;object-fit:contain;opacity:.82}.south-african-brands{display:flex;max-width:1280px;margin:14px auto 0;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}.south-african-brands span{margin-right:5px;color:#777;font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.south-african-brands a{border:1px solid #ddd;border-radius:999px;padding:6px 12px;color:#555;font-family:Georgia,"Times New Roman",serif;font-size:12px;font-weight:700;transition:.2s ease}.south-african-brands a:hover{border-color:#111;background:#111;color:#fff}
-@media(max-width:640px){.premium-banner img{min-height:220px;object-fit:cover;object-position:64% center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
+@media(max-width:640px){.premium-banner img{object-position:center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
+
+/* Uploaded hero artwork is 1920 × 800 (12:5). Preserve that exact frame at
+   every viewport and let the branded neutral surround absorb any transparency. */
+.hero-slide{aspect-ratio:12/5;background:radial-gradient(circle at center,#292929 0,#141414 70%,#0d0d0d 100%)}
+.hero-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important}
