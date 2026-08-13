@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://chupahub.com';
+export const SITE_URL = 'https://thesnohomish.com';
 export const SITE_NAME = 'The Snohomish';
 export const DEFAULT_DESCRIPTION = 'Shop wines, spirits, beers and beverages online from The Snohomish. Retail delivery, wholesale supply, three Nairobi retail stores and our upcoming Mega Drive-Through.';
 

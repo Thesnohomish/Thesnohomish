@@ -6,11 +6,19 @@ const nextConfig = {
   images: { remotePatterns: [{ protocol: 'https', hostname: '**' }] },
   poweredByHeader: false,
   async redirects() {
-    return categoryRedirects.map((slug) => ({
-      source: `/category/${slug}`,
-      destination: `/${slug === 'liqueurs' ? 'liqueur' : slug}`,
-      permanent: true,
-    }));
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: '(?:www\\.)?chupahub\\.com' }],
+        destination: 'https://thesnohomish.com/:path*',
+        permanent: true,
+      },
+      ...categoryRedirects.map((slug) => ({
+        source: `/category/${slug}`,
+        destination: `/${slug === 'liqueurs' ? 'liqueur' : slug}`,
+        permanent: true,
+      })),
+    ];
   },
 };
 export default nextConfig;
