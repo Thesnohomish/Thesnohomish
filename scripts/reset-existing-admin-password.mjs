@@ -1,69 +1,55 @@
 #!/usr/bin/env node
 
+import { unlink } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_USER_ID = 'aa001392-35bf-464d-b646-eb1f2bbebdaa';
 const ADMIN_EMAIL = 'evancekirigia@gmail.com';
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const EXPECTED_PROJECT_URL = 'https://xttdnlqxbtgdspfczsnw.supabase.co';
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const password = process.env.ADMIN_TEMP_PASSWORD;
-const publicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  || process.env.SUPABASE_PUBLISHABLE_KEY
-  || process.env.SUPABASE_ANON_KEY;
 
 if (!url) throw new Error('NEXT_PUBLIC_SUPABASE_URL is required.');
+if (url !== EXPECTED_PROJECT_URL) throw new Error('NEXT_PUBLIC_SUPABASE_URL does not identify the expected existing Supabase project.');
 if (!serviceRoleKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required.');
 if (!password) throw new Error('ADMIN_TEMP_PASSWORD is required.');
-if (!publicKey) throw new Error('A Supabase publishable or anon key is required to verify normal password login.');
 
-const serverAdmin = createClient(url, serviceRoleKey, {
+const supabase = createClient(url, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const beforeResult = await serverAdmin.auth.admin.getUserById(ADMIN_USER_ID);
-if (beforeResult.error) throw beforeResult.error;
-if (!beforeResult.data.user) throw new Error('The existing admin Auth user was not found.');
-if (beforeResult.data.user.email?.toLowerCase() !== ADMIN_EMAIL) {
-  throw new Error('The supplied user ID does not belong to the expected admin email.');
-}
+let page = 1;
+let user;
+do {
+  const result = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+  if (result.error) throw result.error;
+  user = result.data.users.find(candidate => candidate.email?.trim().toLowerCase() === ADMIN_EMAIL);
+  if (user || result.data.users.length < 1000) break;
+  page += 1;
+} while (!user);
 
-const previousLastSignIn = beforeResult.data.user.last_sign_in_at || null;
-const updateResult = await serverAdmin.auth.admin.updateUserById(ADMIN_USER_ID, {
+if (!user) throw new Error(`No Supabase Auth user exists for ${ADMIN_EMAIL}.`);
+
+const updateResult = await supabase.auth.admin.updateUserById(user.id, {
   password,
   email_confirm: true,
 });
 if (updateResult.error) throw updateResult.error;
 
-const verificationResult = await serverAdmin.auth.admin.getUserById(ADMIN_USER_ID);
+const verificationResult = await supabase.auth.admin.getUserById(user.id);
 if (verificationResult.error) throw verificationResult.error;
-if (!verificationResult.data.user) throw new Error('Password updated, but getUserById did not return the user.');
+const verifiedUser = verificationResult.data.user;
+if (!verifiedUser) throw new Error('Password updated, but Supabase did not return the user during verification.');
+if (verifiedUser.email?.trim().toLowerCase() !== ADMIN_EMAIL) throw new Error('Verified Auth user email does not match the requested administrator.');
 
-const publicClient = createClient(url, publicKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-const loginResult = await publicClient.auth.signInWithPassword({
-  email: ADMIN_EMAIL.trim(),
-  password,
-});
-if (loginResult.error) throw loginResult.error;
-if (!loginResult.data.session || !loginResult.data.user) {
-  throw new Error('Supabase did not return an authenticated session');
-}
-
-const afterLoginResult = await serverAdmin.auth.admin.getUserById(ADMIN_USER_ID);
-if (afterLoginResult.error) throw afterLoginResult.error;
-const currentLastSignIn = afterLoginResult.data.user?.last_sign_in_at || null;
-await publicClient.auth.signOut();
+// This is deliberately a one-use operator script. Removing it after success
+// prevents the privileged reset operation from remaining available.
+await unlink(fileURLToPath(import.meta.url));
 
 console.log(JSON.stringify({
-  passwordUpdateSucceeded: Boolean(updateResult.data.user),
-  getUserByIdSucceeded: Boolean(verificationResult.data.user),
-  signInWithPasswordSucceeded: true,
-  userId: verificationResult.data.user.id,
-  email: verificationResult.data.user.email,
-  emailConfirmed: Boolean(verificationResult.data.user.email_confirmed_at),
-  lastSignInAtChanged: Boolean(currentLastSignIn && currentLastSignIn !== previousLastSignIn),
-  lastSignInAt: currentLastSignIn,
+  userId: verifiedUser.id,
+  passwordUpdateSucceeded: true,
+  emailConfirmed: Boolean(verifiedUser.email_confirmed_at),
+  resetScriptDisabled: true,
 }, null, 2));
