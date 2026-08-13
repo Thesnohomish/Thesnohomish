@@ -1,10 +1,9 @@
-'use client';
-
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { DbBanner } from '@/lib/supabase';
 import { SmartImage } from '@/components/SmartImage';
+
+const BANNERS_PER_PAGE = 2;
 
 export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
   const [current, setCurrent] = useState(0), [paused, setPaused] = useState(false);
