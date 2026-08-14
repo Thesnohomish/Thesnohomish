@@ -40,7 +40,7 @@ export default async function Home() {
     <HeroCarousel banners={banners}/>
     <section className="alcohol-category-carousel" aria-labelledby="shop-by-category">
       <div className="alcohol-category-heading"><h2 id="shop-by-category">Discover drinks by category</h2><Link href="/shop">Browse all categories <ArrowRight size={17}/></Link></div>
-      <div className="alcohol-category-track">{[0,1].map(copy=><div className="alcohol-category-group" aria-hidden={copy===1} key={copy}>{categoryShowcase.map(({category,image})=><Link href={`/category/${category.slug}`} tabIndex={copy===1?-1:undefined} key={category.id}><span className="alcohol-category-image"><SmartImage src={image} alt={`${category.name} category`} sizes="82px" fit="contain" quality={95}/></span><b>{category.name}</b></Link>)}</div>)}</div>
+      <div className="alcohol-category-grid">{categoryShowcase.map(({category,image})=><Link href={`/category/${category.slug}`} key={category.id}><span className="alcohol-category-image"><SmartImage src={image} alt={`${category.name} category`} sizes="82px" fit="contain" quality={95}/></span><b>{category.name}</b></Link>)}</div>
     </section>
     {promotions.length>0&&<section className="mx-auto grid max-w-7xl gap-4 px-5 py-8 md:grid-cols-2">{promotions.map(p=><Link key={p.id} href={p.button_url||'/offers'} className="deal-card"><div><small>{p.badge_text||p.code||'Limited offer'}</small><h2>{p.title}</h2><p>{p.description}</p></div><strong>{p.discount_type==='percent'?`${p.discount_value}%`:money(p.discount_value)}</strong></Link>)}</section>}
     <section className="bg-white py-8">{homepageRows.map(section=><ProductRail key={section.title} {...section}/>)}</section>
