@@ -32,7 +32,9 @@ export default async function Home() {
           ? topSellers
           : featured,
     href: section.categories?.slug ? `/category/${section.categories.slug}` : '/shop',
-    limit: section.item_limit,
+    // Nine products fill a desktop row; retain another row's worth so any
+    // remaining products continue through the horizontal carousel.
+    limit: Math.max(section.item_limit, 18),
   })).filter(section => section.products.length);
   return <main>
     <HeroCarousel banners={banners}/>

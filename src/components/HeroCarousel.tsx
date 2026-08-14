@@ -15,9 +15,9 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
   const title = banner.title || 'The Snohomish promotion';
 
   return (
-    <section aria-label="The Snohomish promotion" className="hero-carousel relative mx-4 mt-3 max-w-6xl overflow-hidden rounded-2xl bg-neutral-900 shadow-card sm:mx-8 sm:mt-5 sm:rounded-3xl xl:mx-auto">
-      <Link href={banner.button_url || '/shop'} title={title} className="relative block aspect-[16/7] w-full cursor-pointer overflow-hidden rounded-[inherit] bg-[#171717] focus-ring sm:aspect-[4/1] lg:aspect-[24/5]">
-        <SmartImage src={image} alt={title} sizes="(max-width: 1280px) 94vw, 1152px" priority quality={100} fit="contain" className="hero-image" />
+    <section aria-label="The Snohomish promotion" className="hero-carousel relative mx-4 mt-3 max-w-7xl overflow-hidden rounded-2xl bg-neutral-900 shadow-card sm:mx-8 sm:mt-5 sm:rounded-3xl xl:mx-auto">
+      <Link href={banner.button_url || '/shop'} title={title} className="relative block aspect-[16/7] w-full cursor-pointer overflow-hidden rounded-[inherit] bg-[#171717] focus-ring sm:aspect-[4/1] lg:aspect-[5/1]">
+        <SmartImage src={image} alt={title} sizes="(max-width: 1344px) calc(100vw - 4rem), 1280px" priority quality={100} fit="contain" className="hero-image" />
       </Link>
     </section>
   );
