@@ -112,3 +112,10 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden}.app-shell{background:#f
 @media(max-width:640px){.premium-banner img{min-height:220px;object-fit:cover;object-position:64% center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
 
 .hero-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important}
+
+/* Keep administration visually aligned with the black and Snohomish-yellow storefront theme. */
+.admin-shell{background:#f5f4f0;color:#0d0d0d}
+.admin-shell header{border:1px solid #2d2d2d;box-shadow:0 12px 28px #0002}
+.admin-shell .orange-gradient{background:#fff500;color:#111}
+.admin-shell input:focus,.admin-shell select:focus,.admin-shell textarea:focus{border-color:#d1ca00;outline:3px solid #fff50055;outline-offset:1px}
+.admin-shell button,.admin-shell a{transition:background-color .2s ease,color .2s ease,border-color .2s ease}
