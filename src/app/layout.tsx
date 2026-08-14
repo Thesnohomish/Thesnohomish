@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Footer, Header } from '@/components/Site';
 import { CartFeedback } from '@/components/CartFeedback';
+import { AgeGate } from '@/components/AgeGate';
 import { getProducts, getSiteContent } from '@/lib/supabase';
 import { businessGraph, DEFAULT_DESCRIPTION, JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 import { getSupabaseConfig, serializeSupabaseConfig } from '@/lib/supabase-config';
@@ -56,6 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <head><script dangerouslySetInnerHTML={{ __html: `window.__SNOHOMISH_SUPABASE__=${publicSupabaseConfig}` }} /></head>
       <body className="app-shell min-h-screen">
+        <AgeGate />
         <Header content={content} products={products} />
         <CartFeedback />
         <JsonLd data={businessGraph([content.instagram_url || '', content.facebook_url || '', content.tiktok_url || ''])} />
