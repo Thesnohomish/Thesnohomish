@@ -138,8 +138,8 @@ function CatalogCards({ products, limit }: { products: DbProduct[]; limit?: numb
   }).slice(0, limit)}</>;
 }
 
-export function ProductRail({ title, products, href, limit = 8 }: { title: string; products: DbProduct[]; href: string; limit?: number }) {
+export function ProductRail({ title, products, href, limit = 18 }: { title: string; products: DbProduct[]; href: string; limit?: number }) {
   const rail = useRef<HTMLDivElement>(null), paused = useRef(false);
-  useEffect(() => { const timer = window.setInterval(() => { const node=rail.current, first=node?.firstElementChild as HTMLElement|null; if(!node||!first||paused.current||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return; const step=first.offsetWidth+16, atEnd=node.scrollLeft+node.clientWidth>=node.scrollWidth-step; node.scrollTo({left:atEnd?0:node.scrollLeft+step,behavior:'smooth'}); },2600); return()=>window.clearInterval(timer); },[]);
+  useEffect(() => { const timer = window.setInterval(() => { const node=rail.current, first=node?.firstElementChild as HTMLElement|null; if(!node||!first||paused.current||node.scrollWidth<=node.clientWidth||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return; const gap=parseFloat(window.getComputedStyle(node).columnGap)||0, step=first.offsetWidth+gap, atEnd=node.scrollLeft+node.clientWidth>=node.scrollWidth-step/2; node.scrollTo({left:atEnd?0:node.scrollLeft+step,behavior:'smooth'}); },3600); return()=>window.clearInterval(timer); },[]);
   return <section className="mx-auto max-w-none overflow-hidden px-6 py-8"><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-extrabold tracking-tight text-brand-ink">{title}</h2><Link href={href} className="font-bold text-brand-orange">View all {title}</Link></div><div ref={rail} onMouseEnter={()=>{paused.current=true}} onMouseLeave={()=>{paused.current=false}} onTouchStart={()=>{paused.current=true}} onTouchEnd={()=>{paused.current=false}} className="product-rail-grid"><CatalogCards products={products} limit={limit} /></div></section>;
 }
