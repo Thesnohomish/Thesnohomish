@@ -51,25 +51,23 @@ body {
 }
 
 .product-rail-grid {
-  display: grid;
-  grid-auto-columns: minmax(118px, 36vw);
-  grid-auto-flow: column;
-  gap: .65rem;
-  overflow-x: auto;
-  padding: .25rem .1rem 1rem;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
+  overflow: hidden;
+  padding: .25rem 0 1rem;
 }
-.product-rail-grid > * { display: block; scroll-snap-align: start; }
+.product-rail-track{display:flex;width:max-content;animation:product-rail-scroll 72s linear infinite;will-change:transform}
+.product-rail-group{display:flex;gap:.65rem;padding-right:.65rem}
+.product-rail-group>*{display:block;width:36vw;flex:none}
+.product-rail-grid:hover .product-rail-track,.product-rail-grid:focus-within .product-rail-track{animation-play-state:paused}
+@keyframes product-rail-scroll{to{transform:translateX(-50%)}}
 .product-image-container{position:relative;display:flex;width:100%;aspect-ratio:1/1;align-items:center;justify-content:center;overflow:hidden;background:#fff}
 .product-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:12px;filter:contrast(1.07) saturate(1.04)}
 .product-detail-image{height:clamp(350px,92vw,440px)}
 .product-detail-image .product-image-container{height:100%;aspect-ratio:auto}
 @media(min-width:768px){.product-detail-image{height:min(560px,55vw)}.product-detail-image .product-image{padding:24px}}
-@media (min-width: 640px) { .product-rail-grid { grid-auto-columns: minmax(132px, 21vw); } }
-@media (min-width: 768px) { .product-rail-grid { grid-auto-columns: minmax(138px, 14.5vw); } }
-@media (min-width: 1280px) { .product-rail-grid { grid-auto-columns:calc((100% - 5.2rem)/9); } }
+@media (min-width: 640px) { .product-rail-group>*{width:21vw} }
+@media (min-width: 768px) { .product-rail-group>*{width:14.5vw} }
+@media (min-width: 1280px) { .product-rail-group>*{width:calc((100vw - 8.2rem)/9)} }
+@media (prefers-reduced-motion: reduce) { .product-rail-track{animation:none} .product-rail-group[aria-hidden="true"]{display:none} }
 @keyframes brand-partnership-scroll {
   from { transform: translateX(100%); }
   to { transform: translateX(-100%); }
@@ -111,7 +109,7 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden}.app-shell{background:#f
 .featured-brand-wall{border-bottom:1px solid #e8e8e8;background:#fff;padding:18px 20px 20px}.featured-brand-wall>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.featured-brand-art{display:grid;gap:8px;max-width:1280px;margin:auto}.featured-brand-art img{display:block;width:100%;height:64px;object-fit:contain;opacity:.82}.south-african-brands{display:flex;max-width:1280px;margin:14px auto 0;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}.south-african-brands span{margin-right:5px;color:#777;font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.south-african-brands a{border:1px solid #ddd;border-radius:999px;padding:6px 12px;color:#555;font-family:Georgia,"Times New Roman",serif;font-size:12px;font-weight:700;transition:.2s ease}.south-african-brands a:hover{border-color:#111;background:#111;color:#fff}
 @media(max-width:640px){.premium-banner img{min-height:220px;object-fit:cover;object-position:64% center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
 
-.hero-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important}
+.hero-image{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important}
 
 /* Keep administration visually aligned with the black and Snohomish-yellow storefront theme. */
 .admin-shell{background:#f5f4f0;color:#0d0d0d}
