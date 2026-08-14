@@ -18,8 +18,9 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
         {visibleBanners.map((slide, index) => {
           const image = slide.image_url || slide.mobile_image_url || '/premium-spirits-banner.svg';
           const title = slide.title || 'The Snohomish promotion';
+          const preserveFullArtwork = image.includes('premium-spirits-banner');
           return <Link key={slide.id} href={slide.button_url || '/shop'} title={title} aria-label={title} className={`hero-slide absolute inset-0 block cursor-pointer overflow-hidden rounded-[inherit] focus-ring ${visibleBanners.length > 1 ? 'hero-slide-animated' : ''}`} style={{ '--hero-slide-index': index } as React.CSSProperties}>
-            <SmartImage src={image} alt={title} sizes="100vw" position="right center" priority={index === 0} quality={100} fit="cover" className="hero-image" />
+            <SmartImage src={image} alt={title} sizes="100vw" position={preserveFullArtwork ? 'center' : 'right center'} priority={index === 0} quality={100} fit={preserveFullArtwork ? 'contain' : 'cover'} className={`hero-image ${preserveFullArtwork ? 'hero-image-contain' : ''}`} />
           </Link>;
         })}
       </div>
