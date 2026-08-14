@@ -19,7 +19,7 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
 
   return (
     <section aria-label="The Snohomish promotion" className="hero-carousel relative mt-3 w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-card sm:mt-5 sm:rounded-3xl">
-      <Link href={banner.button_url || '/shop'} title={title} className="relative block aspect-[16/7] w-full max-h-[400px] cursor-pointer overflow-hidden rounded-[inherit] bg-[#171717] focus-ring sm:aspect-[4/1] lg:aspect-[5/1]">
+      <Link href={banner.button_url || '/shop'} title={title} className="relative block aspect-[16/7] w-full max-h-[360px] cursor-pointer overflow-hidden rounded-[inherit] bg-[#171717] focus-ring sm:aspect-[4/1] lg:aspect-[11/2]">
         <SmartImage src={image} alt={title} sizes="100vw" position="right center" priority quality={100} fit="cover" className="hero-image" />
       </Link>
     </section>

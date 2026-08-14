@@ -54,7 +54,7 @@ body {
   overflow: hidden;
   padding: .25rem 0 1rem;
 }
-.product-rail-track{display:flex;width:max-content;animation:product-rail-scroll 72s linear infinite;will-change:transform}
+.product-rail-track{display:flex;width:max-content;animation:product-rail-scroll var(--product-rail-duration,90s) linear infinite;will-change:transform}
 .product-rail-group{display:flex;gap:.65rem;padding-right:.65rem}
 .product-rail-group>*{display:block;width:36vw;flex:none}
 .product-rail-grid:hover .product-rail-track,.product-rail-grid:focus-within .product-rail-track{animation-play-state:paused}
