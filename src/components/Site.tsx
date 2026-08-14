@@ -138,8 +138,6 @@ function CatalogCards({ products, limit }: { products: DbProduct[]; limit?: numb
   }).slice(0, limit)}</>;
 }
 
-export function ProductRail({ title, products, href, limit = 8 }: { title: string; products: DbProduct[]; href: string; limit?: number }) {
-  const rail = useRef<HTMLDivElement>(null), paused = useRef(false);
-  useEffect(() => { const timer = window.setInterval(() => { const node=rail.current, first=node?.firstElementChild as HTMLElement|null; if(!node||!first||paused.current||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return; const step=first.offsetWidth+16, atEnd=node.scrollLeft+node.clientWidth>=node.scrollWidth-step; node.scrollTo({left:atEnd?0:node.scrollLeft+step,behavior:'smooth'}); },2600); return()=>window.clearInterval(timer); },[]);
-  return <section className="mx-auto max-w-none overflow-hidden px-6 py-8"><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-extrabold tracking-tight text-brand-ink">{title}</h2><Link href={href} className="font-bold text-brand-orange">View all {title}</Link></div><div ref={rail} onMouseEnter={()=>{paused.current=true}} onMouseLeave={()=>{paused.current=false}} onTouchStart={()=>{paused.current=true}} onTouchEnd={()=>{paused.current=false}} className="product-rail-grid"><CatalogCards products={products} limit={limit} /></div></section>;
+export function ProductRail({ title, products, href, limit = 18 }: { title: string; products: DbProduct[]; href: string; limit?: number }) {
+  return <section className="mx-auto max-w-none overflow-hidden px-6 py-8"><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-extrabold tracking-tight text-brand-ink">{title}</h2><Link href={href} className="font-bold text-brand-orange">View all {title}</Link></div><div className="product-rail-grid"><div className="product-rail-track"><div className="product-rail-group"><CatalogCards products={products} limit={limit} /></div><div className="product-rail-group" aria-hidden="true" inert><CatalogCards products={products} limit={limit} /></div></div></div></section>;
 }
