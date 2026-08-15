@@ -13,13 +13,13 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
   }
 
   return (
-    <section aria-label="The Snohomish promotion" className="hero-carousel relative mt-3 w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-card sm:mt-5 sm:rounded-3xl">
+    <section aria-label="The Snohomish promotion" className="hero-carousel relative mx-auto mt-3 w-[calc(100%-2rem)] max-w-[1500px] overflow-hidden rounded-2xl bg-neutral-900 shadow-card sm:mt-5 sm:rounded-3xl">
       <div className="relative aspect-[4/1] w-full overflow-hidden rounded-[inherit] bg-[#171717]">
         {visibleBanners.map((slide, index) => {
           const image = slide.image_url || slide.mobile_image_url || '/premium-spirits-banner.svg';
           const title = slide.title || 'The Snohomish promotion';
           return <Link key={slide.id} href={slide.button_url || '/shop'} title={title} aria-label={title} className={`hero-slide absolute inset-0 block cursor-pointer overflow-hidden rounded-[inherit] focus-ring ${visibleBanners.length > 1 ? 'hero-slide-animated' : ''}`} style={{ '--hero-slide-index': index } as React.CSSProperties}>
-            <SmartImage src={image} alt={title} sizes="100vw" position="center" priority={index === 0} quality={100} fit="contain" className="hero-image" />
+            <SmartImage src={image} alt={title} sizes="(min-width: 1532px) 1500px, calc(100vw - 2rem)" position="center" priority={index === 0} quality={100} fit="contain" className={`hero-image ${visibleBanners.length > 1 ? 'hero-image-transition' : ''}`} />
           </Link>;
         })}
       </div>
