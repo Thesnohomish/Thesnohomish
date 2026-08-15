@@ -109,10 +109,10 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden;font-family:ui-sans-seri
 @media(max-width:640px){.premium-banner img{min-height:220px;object-fit:cover;object-position:64% center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
 
 .hero-image{display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:contain!important;object-position:center!important;transform-origin:center;will-change:opacity,transform}
-.hero-slide-animated{opacity:0;animation:hero-slide-cycle 14s ease-in-out infinite;animation-delay:calc(var(--hero-slide-index) * 7s)}
-.hero-slide-animated .hero-image-transition{animation:hero-image-zoom-cycle 14s cubic-bezier(.33,1,.68,1) infinite;animation-delay:calc(var(--hero-slide-index) * 7s)}
-@keyframes hero-image-zoom-cycle{0%{transform:scale(1.015)}6%,47%{transform:scale(1)}53%,100%{transform:scale(1.025)}}
-@keyframes hero-slide-cycle{0%,47%{z-index:2;opacity:1}53%,100%{z-index:1;opacity:0}}
+.hero-slide-animated{opacity:0;animation:hero-slide-cycle 10s ease-in-out infinite;animation-delay:calc(var(--hero-slide-index) * 5s)}
+.hero-slide-animated .hero-image-transition{animation:hero-image-zoom-cycle 10s cubic-bezier(.33,1,.68,1) infinite;animation-delay:calc(var(--hero-slide-index) * 5s)}
+@keyframes hero-image-zoom-cycle{0%{transform:scale(1.03)}8%,42%{transform:scale(1)}50%,100%{transform:scale(1.045)}}
+@keyframes hero-slide-cycle{0%,42%{z-index:2;opacity:1}50%,100%{z-index:1;opacity:0}}
 @media(prefers-reduced-motion:reduce){.hero-image{will-change:auto}.hero-slide-animated .hero-image-transition{animation:none;opacity:1;transform:none}.hero-slide-animated{animation:none;opacity:0}.hero-slide-animated:first-child{opacity:1}}
 
 /* Keep administration visually aligned with the black and Snohomish-yellow storefront theme. */
