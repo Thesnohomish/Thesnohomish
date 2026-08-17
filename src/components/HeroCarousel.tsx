@@ -13,8 +13,8 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
   }
 
   return (
-    <section aria-label="The Snohomish promotion" className="hero-carousel relative mx-auto mt-3 w-[calc(100%-2rem)] max-w-[1500px] overflow-hidden rounded-2xl bg-neutral-900 shadow-card sm:mt-5 sm:rounded-3xl">
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[inherit] bg-[#171717] sm:aspect-[4/1]">
+    <section aria-label="The Snohomish promotion" className="hero-carousel relative mx-auto mt-3 w-[calc(100%-2rem)] max-w-[1500px] overflow-hidden rounded-2xl bg-white shadow-card sm:mt-5 sm:rounded-3xl">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[inherit] bg-white sm:aspect-[4/1]">
         {visibleBanners.map((slide, index) => {
           const desktopImage = slide.image_url || slide.mobile_image_url || '/premium-spirits-banner.svg';
           const mobileImage = slide.mobile_image_url || desktopImage;

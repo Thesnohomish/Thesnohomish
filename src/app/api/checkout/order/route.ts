@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
     const { data: checkout, error: checkoutError } = await db.from('store_settings').select('value').eq('key', 'checkout').maybeSingle();
     if (checkoutError) throw checkoutError;
     const store = (checkout?.value || {}) as Record<string, unknown>;
+    if (body.paymentMethod === 'mpesa' && store.allow_mpesa === false) throw new Error('M-Pesa is not available right now. Choose another payment method.');
+    if (body.paymentMethod === 'cash' && store.allow_cash === false) throw new Error('Cash on delivery is not available right now. Choose another payment method.');
     const { data: bands, error: bandsError } = await db.from('delivery_settings').select('*').eq('is_active', true).order('sort_order');
     if (bandsError) throw bandsError;
     const storeLatitude = configuredCoordinate(store.store_latitude, process.env.NEXT_PUBLIC_STORE_LATITUDE);
