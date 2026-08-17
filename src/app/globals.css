@@ -63,6 +63,7 @@ body {
 .product-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:10px;filter:contrast(1.14) saturate(1.06)}
 .product-detail-image{height:clamp(350px,92vw,440px)}
 .product-detail-image .product-image-container{height:100%;aspect-ratio:auto}
+@media(max-width:640px){.product-image{padding:6px}.product-detail-image{height:min(78vh,calc(100vw - 2rem));min-height:280px}.product-detail-image .product-image{padding:8px}}
 @media(min-width:768px){.product-detail-image{height:min(560px,55vw)}.product-detail-image .product-image{padding:24px}}
 @media (min-width: 640px) { .product-rail-loop-group>*{width:21vw} .product-rail-static{grid-template-columns:repeat(4,minmax(0,1fr))} }
 @media (min-width: 768px) { .product-rail-loop-group>*{width:14.5vw} .product-rail-static{grid-template-columns:repeat(6,minmax(0,1fr))} }
@@ -109,7 +110,7 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden;font-family:ui-sans-seri
 @media(max-width:640px){.premium-banner img{min-height:220px;object-fit:cover;object-position:64% center}.featured-brand-wall{padding:12px 10px 16px}.featured-brand-art{gap:3px}.featured-brand-art img{height:46px}.south-african-brands{margin-top:10px;gap:5px}.south-african-brands span{width:100%;margin:0;text-align:center}.south-african-brands a{padding:5px 9px;font-size:10px}}
 
 .hero-image{display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:contain!important;object-position:center!important;transform-origin:center;will-change:opacity,transform}
-@media(max-width:640px){.hero-image{object-fit:cover!important}}
+@media(max-width:640px){.hero-image{object-fit:contain!important;background:#0d0d0d}}
 .hero-slide-animated{opacity:0;animation-duration:10s;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
 .hero-slide-animated:first-child{animation-name:hero-slide-first}.hero-slide-animated:first-child .hero-image-transition{animation:hero-image-zoom-first 10s cubic-bezier(.33,1,.68,1) infinite}
 .hero-slide-animated:nth-child(2){animation-name:hero-slide-second}.hero-slide-animated:nth-child(2) .hero-image-transition{animation:hero-image-zoom-second 10s cubic-bezier(.33,1,.68,1) infinite}
