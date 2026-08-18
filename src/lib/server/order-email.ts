@@ -4,7 +4,7 @@ import { deliverEmail } from '@/lib/server/resend-email';
 const SITE_URL = 'https://thesnohomish.com';
 const MAX_ATTEMPTS = 3;
 
-export type OrderEmailEvent = 'placed' | 'accepted' | 'preparing' | 'dispatched' | 'delivered' | 'cancelled' | 'new_order_admin';
+export type OrderEmailEvent = 'placed' | 'dispatched' | 'new_order_admin';
 export type EmailOrder = {
   id: string;
   orderNumber: string;
@@ -24,11 +24,7 @@ export type EmailOrder = {
 
 const eventCopy: Record<OrderEmailEvent, { subject: (number: string) => string; heading: string; message: string }> = {
   placed: { subject: number => `Order ${number} received`, heading: 'Thanks for your order', message: 'We received your order and will update you as it moves through delivery.' },
-  accepted: { subject: number => `Order ${number} accepted`, heading: 'Your order is accepted', message: 'The The Snohomish team has accepted your order.' },
-  preparing: { subject: number => `Order ${number} is being prepared`, heading: 'We are preparing your order', message: 'Your items are being packed and checked for dispatch.' },
-  dispatched: { subject: number => `Order ${number} is on the way`, heading: 'Your rider is on the way', message: 'Your order has left The Snohomish and is heading to you.' },
-  delivered: { subject: number => `Order ${number} delivered`, heading: 'Your order was delivered', message: 'Thank you for choosing The Snohomish. We hope you enjoy your order responsibly.' },
-  cancelled: { subject: number => `Order ${number} cancelled`, heading: 'Your order was cancelled', message: 'Your order has been cancelled. Contact The Snohomish customer care if you need help.' },
+  dispatched: { subject: number => `Order ${number} is out for delivery`, heading: 'Your order is out for delivery', message: 'Your rider has left The Snohomish and is heading to you.' },
   new_order_admin: { subject: number => `New The Snohomish order ${number}`, heading: 'New order placed', message: 'A new customer order needs attention.' },
 };
 
@@ -38,7 +34,8 @@ const money = (value: number) => `KES ${Number(value).toLocaleString('en-KE', { 
 export function orderEmailHtml(order: EmailOrder, event: OrderEmailEvent) {
   const copy = eventCopy[event];
   const rows = order.items.map(item => `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.quantity)}</td><td>${escapeHtml(money(item.lineTotal))}</td></tr>`).join('');
-  return `<!doctype html><html lang="en"><body style="font-family:Arial,sans-serif;color:#111827;background:#fff7f2;padding:24px"><main style="max-width:640px;margin:auto;background:#fff;padding:24px"><h1 style="color:#082b57">${escapeHtml(copy.heading)}</h1><p>${escapeHtml(copy.message)}</p><p><strong>Order:</strong> ${escapeHtml(order.orderNumber)}</p><p><strong>Customer:</strong> ${escapeHtml(order.customerName)}</p><table style="width:100%;border-collapse:collapse"><thead><tr><th align="left">Item</th><th align="left">Qty</th><th align="left">Total</th></tr></thead><tbody>${rows}</tbody></table><p><strong>Subtotal:</strong> ${escapeHtml(money(order.subtotal))}</p><p><strong>Delivery:</strong> ${escapeHtml(money(order.deliveryFee))}</p><p><strong>Order total:</strong> ${escapeHtml(money(order.total))}</p><p><strong>Delivery address:</strong> ${escapeHtml(order.deliveryAddress)}</p><p><strong>Payment:</strong> ${escapeHtml(order.paymentMethod)}</p><p><strong>Estimated delivery:</strong> ${escapeHtml(order.estimatedDelivery)}</p><small>Customers must be 18 or older. Please drink responsibly.</small></main></body></html>`;
+  const rider = event === 'dispatched' ? `<section style="margin:20px 0;padding:16px;background:#fff7f2;border-radius:8px"><h2 style="margin-top:0;color:#082b57">Your rider</h2><p><strong>Name:</strong> ${escapeHtml(order.riderName)}</p><p><strong>Phone:</strong> ${escapeHtml(order.riderPhone)}</p></section>` : '';
+  return `<!doctype html><html lang="en"><body style="font-family:Arial,sans-serif;color:#111827;background:#fff7f2;padding:24px"><main style="max-width:640px;margin:auto;background:#fff;padding:24px"><h1 style="color:#082b57">${escapeHtml(copy.heading)}</h1><p>${escapeHtml(copy.message)}</p><p><strong>Order:</strong> ${escapeHtml(order.orderNumber)}</p><p><strong>Customer:</strong> ${escapeHtml(order.customerName)}</p>${rider}<table style="width:100%;border-collapse:collapse"><thead><tr><th align="left">Item</th><th align="left">Qty</th><th align="left">Total</th></tr></thead><tbody>${rows}</tbody></table><p><strong>Subtotal:</strong> ${escapeHtml(money(order.subtotal))}</p><p><strong>Delivery:</strong> ${escapeHtml(money(order.deliveryFee))}</p><p><strong>Order total:</strong> ${escapeHtml(money(order.total))}</p><p><strong>Delivery address:</strong> ${escapeHtml(order.deliveryAddress)}</p><p><strong>Payment:</strong> ${escapeHtml(order.paymentMethod)}</p><p><strong>Estimated delivery:</strong> ${escapeHtml(order.estimatedDelivery)}</p><small>Customers must be 18 or older. Please drink responsibly.</small></main></body></html>`;
 }
 
 export async function sendOrderEmail(db: SupabaseClient, order: EmailOrder, event: OrderEmailEvent, recipient: string) {
