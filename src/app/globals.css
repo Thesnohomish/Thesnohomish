@@ -59,8 +59,8 @@ body {
 .product-rail-arrow{position:absolute;z-index:5;top:42%;display:grid;height:34px;width:34px;place-items:center;transform:translateY(-50%);border:1px solid #d8d5ca;border-radius:50%;background:#fff;color:#111;font-size:25px;font-weight:900;box-shadow:0 5px 18px #0002}
 .product-rail-arrow:hover{background:#E5D600}
 .product-rail-static{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
-.product-image-container{position:relative;display:flex;width:100%;aspect-ratio:1/1;align-items:center;justify-content:center;overflow:hidden;border:0;background:#fff}
-.product-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:10px;filter:contrast(1.14) saturate(1.06)}
+.product-image-container{position:relative;display:flex;width:100%;aspect-ratio:1/1;align-items:center;justify-content:center;overflow:hidden;border:0;border-radius:0;background:#fff;isolation:isolate}
+.product-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:10px;background:#fff;clip-path:inset(1px);filter:contrast(1.14) saturate(1.06)}
 .product-detail-image{height:clamp(350px,92vw,440px)}
 .product-detail-image .product-image-container{height:100%;aspect-ratio:auto}
 @media(max-width:640px){.product-image{padding:6px}.product-detail-image{height:min(78vh,calc(100vw - 2rem));min-height:280px}.product-detail-image .product-image{padding:8px}}
@@ -135,9 +135,9 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden;font-family:ui-sans-seri
 .sno-header>div:nth-child(2){max-width:none!important;width:100%;padding-left:8px!important;padding-right:16px!important}
 .sno-header>div:nth-child(2)>a[aria-label="The Snohomish home"]{order:-1;margin-left:0;margin-right:2px}
 .product-rail-loop-group>*{width:calc((100vw - 3.65rem)/3)}
-.product-rail-loop-group>a,.product-rail-static>a{padding:6px!important}
+.product-rail-loop-group>a,.product-rail-static>a{min-height:100%!important;padding:6px!important;background:#fff!important}
 .product-rail-loop-group h3,.product-rail-static h3{min-height:36px!important;font-size:13px!important;font-weight:800!important;line-height:1.3!important;color:#0d0d0d!important}
-.product-image{padding:5px!important;filter:drop-shadow(0 4px 5px rgba(0,0,0,.16)) contrast(1.18) saturate(1.1) brightness(1.01)!important}
+.product-image{padding:5px!important;background:#fff!important;filter:drop-shadow(0 4px 5px rgba(0,0,0,.14)) contrast(1.22) saturate(1.08) brightness(1.04)!important}
 @media(max-width:639px){.product-rail-frame{padding:0!important}.product-rail-arrow{display:none!important}.product-rail-scroll{scroll-snap-type:x mandatory}.product-rail-loop-group>*{scroll-snap-align:start}.hero-image-mobile{object-fit:contain!important;object-position:center!important;background:#f3f3f1}.hero-image-mobile.hero-image-transition{animation:none!important;transform:none!important}}
 @media(min-width:640px){.product-rail-loop-group>*{width:19vw}}
 @media(min-width:768px){.product-rail-loop-group>*{width:14vw}}

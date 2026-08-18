@@ -29,19 +29,31 @@ async function sanitizeSvg(file: File) {
   return new Blob([new XMLSerializer().serializeToString(document)], { type: 'image/svg+xml' });
 }
 
-async function canvasBlob(source: ImageBitmap, maxEdge: number, quality: number) {
+async function canvasBlob(source: ImageBitmap, maxEdge: number, quality: number, normalizeWhite = false) {
   const scale = Math.min(1, maxEdge / Math.max(source.width, source.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(source.width * scale)); canvas.height = Math.max(1, Math.round(source.height * scale));
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Your browser could not prepare this image.');
   context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  if (normalizeWhite) {
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    for (let index = 0; index < pixels.data.length; index += 4) {
+      const red = pixels.data[index], green = pixels.data[index + 1], blue = pixels.data[index + 2];
+      if (red >= 246 && green >= 246 && blue >= 246) {
+        pixels.data[index] = 255;
+        pixels.data[index + 1] = 255;
+        pixels.data[index + 2] = 255;
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+  }
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
   if (!blob) throw new Error('The image could not be compressed.');
   return blob;
 }
 
-export async function processAdminImage(file: File): Promise<ProcessedImage> {
+export async function processAdminImage(file: File, options: { normalizeWhite?: boolean } = {}): Promise<ProcessedImage> {
   if (file.size > MAX_BYTES) throw new Error('Choose an image smaller than 15 MB.');
   const bytes = new Uint8Array(await file.slice(0, 32).arrayBuffer());
   const actualType = detectedType(bytes);
@@ -56,8 +68,8 @@ export async function processAdminImage(file: File): Promise<ProcessedImage> {
   let bitmap: ImageBitmap;
   try { bitmap = await createImageBitmap(source, { imageOrientation: 'from-image' }); } catch { throw new Error('This image is corrupt or cannot be decoded by this browser.'); }
   try {
-    const fullBlob = await canvasBlob(bitmap, 2000, 0.88);
-    const thumbnailBlob = await canvasBlob(bitmap, 480, 0.8);
+    const fullBlob = await canvasBlob(bitmap, 2000, 0.88, options.normalizeWhite);
+    const thumbnailBlob = await canvasBlob(bitmap, 480, 0.8, options.normalizeWhite);
     const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9-]+/gi, '-').toLowerCase() || 'image';
     const full = new File([fullBlob], `${safeName}.webp`, { type: 'image/webp' });
     const thumbnail = new File([thumbnailBlob], `${safeName}-thumb.webp`, { type: 'image/webp' });

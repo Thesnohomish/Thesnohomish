@@ -12,7 +12,7 @@ type ProductImageProps = {
 export function ProductImage({
   src,
   alt,
-  sizes = '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw',
+  sizes = '(max-width: 639px) 33vw, (max-width: 767px) 19vw, (max-width: 1279px) 14vw, 12.5vw',
   priority = false,
   className = '',
 }: ProductImageProps) {

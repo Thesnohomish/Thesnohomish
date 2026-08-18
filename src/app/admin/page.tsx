@@ -442,7 +442,9 @@ export default function AdminPage() {
     bucket: "product-images" | "category-images" | "banner-images",
   ) {
     if (!supabase) return "";
-    const processed = await processAdminImage(file);
+    const processed = await processAdminImage(file, {
+      normalizeWhite: bucket === "product-images",
+    });
     const id = crypto.randomUUID();
     const path = `admin/${id}-${processed.full.name}`;
     const thumbnailPath = `admin/${id}-${processed.thumbnail.name}`;
