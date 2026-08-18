@@ -130,3 +130,15 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden;font-family:ui-sans-seri
 /* Readable brand accents: muted yellow surfaces use ink; yellow text is darkened on light cards. */
 .bg-brand-orange{color:#111!important}
 .text-brand-orange{color:#706900!important}
+
+/* Stronger storefront visibility on phones and large screens. */
+.sno-header>div:nth-child(2){max-width:none!important;width:100%;padding-left:8px!important;padding-right:16px!important}
+.sno-header>div:nth-child(2)>a[aria-label="The Snohomish home"]{order:-1;margin-left:0;margin-right:2px}
+.product-rail-loop-group>*{width:44vw}
+.product-rail-loop-group>a,.product-rail-static>a{padding:10px!important}
+.product-rail-loop-group h3,.product-rail-static h3{min-height:48px!important;font-size:16px!important;font-weight:800!important;line-height:1.35!important;color:#0d0d0d!important}
+.product-image{padding:3px!important;filter:drop-shadow(0 7px 7px rgba(0,0,0,.16)) contrast(1.12) saturate(1.08)!important}
+@media(max-width:640px){.product-image{padding:1px!important}.hero-image-mobile{object-fit:cover!important;object-position:center!important;background:#f3f3f1}.hero-image-mobile.hero-image-transition{animation:none!important;transform:none!important}}
+@media(min-width:640px){.product-rail-loop-group>*{width:28vw}}
+@media(min-width:768px){.product-rail-loop-group>*{width:21vw}}
+@media(min-width:1280px){.product-rail-loop-group>*{width:calc((100vw - 9rem)/6)}.product-rail-static{grid-template-columns:repeat(6,minmax(0,1fr))}}
