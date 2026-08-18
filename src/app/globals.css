@@ -111,13 +111,11 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden;font-family:ui-sans-seri
 
 .hero-image{display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:contain!important;object-position:center!important;transform-origin:center;will-change:opacity,transform}
 @media(max-width:640px){.hero-image-mobile{object-fit:contain!important;object-position:center!important;background:#fff}}
-.hero-slide-animated{opacity:0;animation-duration:10s;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
-.hero-slide-animated:first-child{animation-name:hero-slide-first}.hero-slide-animated:first-child .hero-image-transition{animation:hero-image-zoom-first 10s cubic-bezier(.33,1,.68,1) infinite}
-.hero-slide-animated:nth-child(2){animation-name:hero-slide-second}.hero-slide-animated:nth-child(2) .hero-image-transition{animation:hero-image-zoom-second 10s cubic-bezier(.33,1,.68,1) infinite}
-@keyframes hero-slide-first{0%,48%{z-index:2;opacity:1}56%,92%{z-index:1;opacity:0}100%{z-index:3;opacity:1}}
-@keyframes hero-slide-second{0%,42%{z-index:1;opacity:0}50%,92%{z-index:3;opacity:1}100%{z-index:2;opacity:0}}
-@keyframes hero-image-zoom-first{0%,48%{transform:scale(1)}56%,92%{transform:scale(1.08)}100%{transform:scale(1)}}
-@keyframes hero-image-zoom-second{0%,42%{transform:scale(1.08)}50%,92%{transform:scale(1)}100%{transform:scale(1.08)}}
+.hero-slide-animated{opacity:1;will-change:transform;animation-duration:10s;animation-timing-function:cubic-bezier(.65,0,.35,1);animation-iteration-count:infinite}
+.hero-slide-animated:first-child{animation-name:hero-slide-first}
+.hero-slide-animated:nth-child(2){animation-name:hero-slide-second}
+@keyframes hero-slide-first{0%,45%{transform:translateX(0)}50%,94.99%{transform:translateX(-100%)}95%{transform:translateX(100%)}100%{transform:translateX(0)}}
+@keyframes hero-slide-second{0%,45%{transform:translateX(100%)}50%,95%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 @media(prefers-reduced-motion:reduce){.hero-image{will-change:auto}.hero-slide-animated,.hero-slide-animated .hero-image-transition{animation:none;transform:none}.hero-slide-animated{opacity:0}.hero-slide-animated:first-child{opacity:1}}
 
 /* Keep administration visually aligned with the black and Snohomish-yellow storefront theme. */
