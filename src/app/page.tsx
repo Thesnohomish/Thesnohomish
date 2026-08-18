@@ -24,6 +24,7 @@ export default async function Home() {
   const categoryShowcase = categories.map(category=>({category,image:category.image_url||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg'}));
   const homepageRows = configuredSections.map(section => ({
     title: section.heading,
+    description: section.description || undefined,
     products: section.product_ids?.length
       ? section.product_ids.map(id => products.find(product => product.id === id)).filter((product): product is typeof products[number] => Boolean(product))
       : section.category_id

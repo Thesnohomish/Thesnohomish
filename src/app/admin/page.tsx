@@ -84,6 +84,7 @@ type Banner = {
 type HomepageSection = {
   id: string;
   heading: string;
+  description?: string;
   category_id?: string;
   product_ids: string[];
   use_best_sellers: boolean;
@@ -1859,6 +1860,7 @@ function HomepageSectionsManager({
     const form = new FormData(event.currentTarget),
       payload = {
         heading: String(form.get("heading") || "").trim(),
+        description: String(form.get("description") || "").trim() || null,
         category_id: String(form.get("category_id") || "") || null,
         product_ids: form.getAll("product_ids").map(String),
         use_best_sellers: form.get("use_best_sellers") === "on",
@@ -1943,6 +1945,18 @@ function HomepageSectionsManager({
           value={editing?.category_id || ""}
           options={categories.map((category) => [category.id, category.name])}
         />
+        <label className="sm:col-span-2 font-bold">
+          Short row description
+          <textarea
+            name="description"
+            defaultValue={editing?.description || ""}
+            placeholder="Example: Deals za Wiki — fresh weekly offers at better prices."
+            className="mt-1 min-h-20 w-full rounded-xl border bg-white p-3 font-normal"
+          />
+          <small className="mt-1 block font-normal text-neutral-500">
+            This appears directly below the row heading on the homepage.
+          </small>
+        </label>
         <Input
           label="Products in carousel"
           name="item_limit"
@@ -2008,6 +2022,11 @@ function HomepageSectionsManager({
           >
             <div>
               <b>{section.heading}</b>
+              {section.description && (
+                <p className="mt-1 text-sm text-neutral-600">
+                  {section.description}
+                </p>
+              )}
               <p className="text-sm text-neutral-500">
                 Order {section.sort_order} · {section.item_limit} products ·{" "}
                 {section.is_active ? "Published" : "Hidden"}
