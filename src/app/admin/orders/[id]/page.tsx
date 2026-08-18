@@ -23,7 +23,7 @@ export default function OrderDetail({
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "*,order_items(*),payments(*),order_status_history(*),order_notifications(*),notification_deliveries(*)",
+        "*,order_items(*),order_status_history(*),order_notifications(*),notification_deliveries(*)",
       )
       .eq("id", id)
       .single();
