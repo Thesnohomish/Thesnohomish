@@ -30,7 +30,8 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
   let customSection = null;
   if (!stableCollectionSlugs.includes(slug as typeof stableCollectionSlugs[number])) {
     const legacySection = await getHomepageSection(slug);
-    const destination = legacySection ? stableCollectionSlug(legacySection) : null;
+    const hasManualProducts = Boolean(legacySection?.product_ids.length);
+    const destination = legacySection && !hasManualProducts ? stableCollectionSlug(legacySection) : null;
     if (destination) permanentRedirect(`/collections/${destination}`);
     if (!legacySection) notFound();
     customSection = legacySection;
