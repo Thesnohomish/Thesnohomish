@@ -39,11 +39,12 @@ export default async function Home() {
     const rowCategorySlugs = [...new Set(rowProducts.map(product => product.categories?.slug).filter((slug): slug is string => Boolean(slug)))];
     const categorySlug = section.categories?.slug || headingCategory?.slug || (rowCategorySlugs.length === 1 ? rowCategorySlugs[0] : undefined);
     const collectionSlug = stableCollectionSlug(section);
+    const isDealsZaWiki = /deals\s+za\s+wiki/i.test(section.heading) && section.product_ids?.length > 0;
     return {
     title: section.heading,
     description: section.description || undefined,
     products: rowProducts,
-    href: categorySlug ? categoryCanonicalPath(categorySlug) : collectionSlug ? `/collections/${collectionSlug}` : '/shop',
+    href: isDealsZaWiki ? `/collections/${section.id}` : categorySlug ? categoryCanonicalPath(categorySlug) : collectionSlug ? `/collections/${collectionSlug}` : '/shop',
     // Nine products fill a desktop row; retain another row's worth so any
     // remaining products continue through the horizontal carousel.
     limit: Math.max(section.item_limit, 18),
