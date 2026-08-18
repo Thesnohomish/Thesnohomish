@@ -63,7 +63,7 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
                   position="center"
                   priority={index === 0}
                   quality={100}
-                  fit="cover"
+                  fit="contain"
                   className={`hero-image hero-image-mobile ${visibleBanners.length > 1 ? "hero-image-transition" : ""}`}
                 />
               </span>
