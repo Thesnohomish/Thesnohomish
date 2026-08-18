@@ -2341,14 +2341,14 @@ function WebsiteManager({
         <label className="sm:col-span-2 font-bold">
           Mobile banner image
           <span className="mt-1 block text-sm font-normal text-neutral-600">
-            Recommended size: 1080 × 472 px (16:7). This separate image is shown
-            in full on phones without cropping.
+            Recommended size: 1200 × 300 px (4:1), matching Quickmart-style
+            mobile banner proportions. This separate image is shown in full.
           </span>
           {mobileBannerImage && (
             <img
               src={mobileBannerImage}
               alt="Mobile banner preview"
-              className="my-2 aspect-[16/7] w-full rounded-xl bg-white object-contain"
+              className="my-2 aspect-[4/1] w-full rounded-xl bg-white object-contain"
             />
           )}
           <input

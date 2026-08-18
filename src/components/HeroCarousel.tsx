@@ -26,7 +26,7 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
       aria-label="The Snohomish promotion"
       className="hero-carousel relative mx-auto w-full max-w-[1500px] overflow-hidden bg-white shadow-card sm:mt-5 sm:w-[calc(100%-2rem)] sm:rounded-3xl"
     >
-      <div className="relative aspect-[16/7] w-full overflow-hidden bg-neutral-100 sm:aspect-[4/1] sm:rounded-[inherit]">
+      <div className="relative aspect-[4/1] w-full overflow-hidden bg-white sm:rounded-[inherit]">
         {visibleBanners.map((slide, index) => {
           const desktopImage =
             slide.image_url ||
