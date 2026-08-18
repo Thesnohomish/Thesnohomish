@@ -68,8 +68,8 @@ export async function processAdminImage(file: File, options: { normalizeWhite?: 
   let bitmap: ImageBitmap;
   try { bitmap = await createImageBitmap(source, { imageOrientation: 'from-image' }); } catch { throw new Error('This image is corrupt or cannot be decoded by this browser.'); }
   try {
-    const fullBlob = await canvasBlob(bitmap, 2000, 0.88, options.normalizeWhite);
-    const thumbnailBlob = await canvasBlob(bitmap, 480, 0.8, options.normalizeWhite);
+    const fullBlob = await canvasBlob(bitmap, 2400, 0.94, options.normalizeWhite);
+    const thumbnailBlob = await canvasBlob(bitmap, 640, 0.88, options.normalizeWhite);
     const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9-]+/gi, '-').toLowerCase() || 'image';
     const full = new File([fullBlob], `${safeName}.webp`, { type: 'image/webp' });
     const thumbnail = new File([thumbnailBlob], `${safeName}-thumb.webp`, { type: 'image/webp' });
