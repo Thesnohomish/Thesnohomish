@@ -5,6 +5,7 @@ import { ProductRail } from '@/components/Site';
 import { SmartImage } from '@/components/SmartImage';
 import { getBanners, getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
+import { categoryCanonicalPath, stableCollectionSlug } from '@/lib/public-urls';
 import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -22,21 +23,31 @@ export default async function Home() {
   const [banners, categories, products, promotions, configuredSections] = await Promise.all([getBanners(), getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
   const categoryShowcase = categories.map(category=>({category,image:category.image_url||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg'}));
-  const homepageRows = configuredSections.map(section => ({
-    title: section.heading,
-    description: section.description || undefined,
-    products: section.product_ids?.length
+  const homepageRows = configuredSections.map(section => {
+    const rowProducts = section.product_ids?.length
       ? section.product_ids.map(id => products.find(product => product.id === id)).filter((product): product is typeof products[number] => Boolean(product))
       : section.category_id
         ? products.filter(product => product.categories?.slug === section.categories?.slug)
         : section.use_best_sellers
           ? topSellers
-          : featured,
-    href: section.categories?.slug ? `/category/${section.categories.slug}` : '/shop',
+          : featured;
+    const heading = section.heading.toLowerCase();
+    const headingCategory = categories.find(category => {
+      const names = [category.name, category.slug].map(value => value.toLowerCase().replace(/[-_]+/g, ' ').trim());
+      return names.some(name => new RegExp(`(^|\\s)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?(\\s|$)`, 'i').test(heading));
+    });
+    const rowCategorySlugs = [...new Set(rowProducts.map(product => product.categories?.slug).filter((slug): slug is string => Boolean(slug)))];
+    const categorySlug = section.categories?.slug || headingCategory?.slug || (rowCategorySlugs.length === 1 ? rowCategorySlugs[0] : undefined);
+    const collectionSlug = stableCollectionSlug(section);
+    return {
+    title: section.heading,
+    description: section.description || undefined,
+    products: rowProducts,
+    href: categorySlug ? categoryCanonicalPath(categorySlug) : collectionSlug ? `/collections/${collectionSlug}` : '/shop',
     // Nine products fill a desktop row; retain another row's worth so any
     // remaining products continue through the horizontal carousel.
     limit: Math.max(section.item_limit, 18),
-  })).filter(section => section.products.length);
+  }}).filter(section => section.products.length);
   return <main>
     <HeroCarousel banners={banners}/>
     <section className="alcohol-category-carousel" aria-labelledby="shop-by-category">
