@@ -5,6 +5,7 @@ import { money, type CheckoutSettings, type DbDeliverySetting } from '@/lib/supa
 import { LocationPicker, type DeliveryLocation, type MapsLoadState } from '@/components/LocationPicker';
 import { updateCartQuantity } from '@/lib/cart';
 import { createBrowserSupabase } from '@/lib/supabase-browser';
+import { customerAuthErrorMessage } from '@/lib/auth-errors';
 
 type CartItem = { productId: string; variantId?: string; name: string; size?: string; price: number; quantity: number; stock?: number };
 type SavedAddress = { id: string; address: string; latitude?: number | null; longitude?: number | null; label?: string | null; apartment?: string | null; building?: string | null; delivery_instructions?: string | null; place_id?: string | null; place_name?: string | null; is_default?: boolean };
@@ -85,7 +86,7 @@ export function CheckoutClient({ settings, bands }: { settings: CheckoutSettings
     const next = '/checkout';
     const callbackOrigin = window.location.hostname === 'thesnohomish.com' ? 'https://www.thesnohomish.com' : window.location.origin;
     const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${callbackOrigin}/auth/callback?next=${encodeURIComponent(next)}`, scopes: 'openid email profile' } });
-    if (oauthError) { sessionStorage.removeItem(checkoutAuthKey); setAuthError(oauthError.message); }
+    if (oauthError) { sessionStorage.removeItem(checkoutAuthKey); setAuthError(customerAuthErrorMessage(oauthError)); }
   }
   function chooseSavedAddress(id: string) {
     setSavedAddressId(id);

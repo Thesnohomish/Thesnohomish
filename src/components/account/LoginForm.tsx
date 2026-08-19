@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createBrowserSupabase } from '@/lib/supabase-browser';
+import { customerAuthErrorMessage } from '@/lib/auth-errors';
 
 export function LoginForm({ initialError }: { initialError?: string }) {
   const supabase = useMemo(() => createBrowserSupabase(), []);
@@ -52,7 +53,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
       window.location.assign(data.url);
     } catch (loginError) {
       console.error('[Google OAuth] failed', loginError);
-      setError(loginError instanceof Error ? loginError.message : 'Google sign-in could not be started.');
+      setError(customerAuthErrorMessage(loginError));
       setLoading(false);
     }
   };
