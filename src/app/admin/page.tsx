@@ -1067,6 +1067,28 @@ function ProductManager({
         ? !item.category_id
         : item.category_id === categoryFilter,
   );
+  const productGroups: Array<[string, Product[]]> = Array.from(
+    (visibleProducts as Product[]).reduce(
+      (groups: Map<string, Product[]>, item: Product) => {
+        const categoryName =
+          (Array.isArray(item.categories)
+            ? item.categories[0]?.name
+            : item.categories?.name) ||
+          categories.find((entry: Category) => entry.id === item.category_id)
+            ?.name ||
+          "Uncategorized";
+        const group = groups.get(categoryName) || [];
+        group.push(item);
+        groups.set(categoryName, group);
+        return groups;
+      },
+      new Map<string, Product[]>(),
+    ),
+  ).sort(([left], [right]) => {
+    if (left === "Uncategorized") return 1;
+    if (right === "Uncategorized") return -1;
+    return left.localeCompare(right);
+  });
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1470,38 +1492,101 @@ function ProductManager({
             ]}
           />
         </div>
-        <div className="mt-3 space-y-2">
-          {visibleProducts.map((item: any) => (
-            <div
-              key={item.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3"
-            >
-              <div>
-                <b>{item.name}</b>
-                <p className="text-sm text-neutral-500">
-                  {(Array.isArray(item.categories)
-                    ? item.categories[0]?.name
-                    : item.categories?.name) || "No category"}{" "}
-                  · KES {Number(item.price).toLocaleString()} ·{" "}
-                  {item.is_active ? "Available" : "Unavailable"}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEdit(item)}
-                  className="rounded-lg bg-brand-deep px-3 py-2 text-sm font-bold text-white"
-                >
-                  <Pencil size={15} />
-                </button>
-                <button
-                  onClick={() => onDelete(item.id, item.name)}
-                  className="rounded-lg border border-red-200 px-3 py-2 text-red-600"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="mt-4 space-y-6">
+          {productGroups.map(([categoryName, categoryProducts]) => {
+            const productsWithoutImages = categoryProducts.filter(
+              (item) =>
+                !item.image_url &&
+                !(Array.isArray(item.gallery_urls) && item.gallery_urls[0]),
+            ).length;
+            return (
+              <section
+                key={categoryName}
+                className="overflow-hidden rounded-2xl border border-orange-100"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-orange-50 px-4 py-3">
+                  <div>
+                    <h4 className="text-lg font-black text-brand-deep">
+                      {categoryName}
+                    </h4>
+                    <p className="text-xs font-bold text-neutral-600">
+                      {categoryProducts.length} product
+                      {categoryProducts.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  {productsWithoutImages > 0 && (
+                    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-black text-red-700">
+                      {productsWithoutImages} without image
+                      {productsWithoutImages === 1 ? "" : "s"}
+                    </span>
+                  )}
+                </div>
+                <div className="divide-y divide-orange-100">
+                  {categoryProducts.map((item) => {
+                    const image =
+                      item.image_url ||
+                      (Array.isArray(item.gallery_urls)
+                        ? item.gallery_urls[0]
+                        : "");
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 p-3 sm:p-4"
+                      >
+                        {image ? (
+                          <img
+                            src={image}
+                            alt={`${item.name} preview`}
+                            loading="lazy"
+                            className="h-20 w-20 shrink-0 rounded-xl border bg-white object-contain p-1 sm:h-24 sm:w-24"
+                          />
+                        ) : (
+                          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-xl border-2 border-dashed border-red-300 bg-red-50 p-2 text-center text-xs font-black text-red-700 sm:h-24 sm:w-24">
+                            No image
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <b className="block leading-tight">{item.name}</b>
+                          <p className="mt-1 text-sm text-neutral-500">
+                            KES {Number(item.price).toLocaleString()} ·{" "}
+                            {item.is_active ? "Available" : "Unavailable"}
+                          </p>
+                          <p
+                            className={`mt-1 text-xs font-bold ${image ? "text-green-700" : "text-red-700"}`}
+                          >
+                            {image ? "Image added" : "Image required"}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            type="button"
+                            aria-label={`Edit ${item.name}`}
+                            onClick={() => onEdit(item)}
+                            className="rounded-lg bg-brand-deep px-3 py-2 text-sm font-bold text-white"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Delete ${item.name}`}
+                            onClick={() => onDelete(item.id, item.name)}
+                            className="rounded-lg border border-red-200 px-3 py-2 text-red-600"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+          {productGroups.length === 0 && (
+            <p className="rounded-xl border border-dashed p-6 text-center font-bold text-neutral-500">
+              No products found in this category.
+            </p>
+          )}
         </div>
       </section>
     </>
