@@ -63,7 +63,7 @@ begin
   if new.customer_id is null then return new; end if;
   insert into public.reward_accounts(customer_id) values(new.customer_id) on conflict(customer_id) do update set updated_at=now() returning id into account_id;
   if new.status='delivered' and old.status is distinct from 'delivered' then
-    earned := floor(greatest(new.total,0)/100)::integer;
+    earned := round(greatest(new.total,0)/100)::integer;
     if earned > 0 then
       insert into public.reward_transactions(reward_account_id,order_id,transaction_type,points,description)
       values(account_id,new.id,'order_earned',earned,'Points earned for delivered order '||coalesce(new.order_number,new.id::text))
