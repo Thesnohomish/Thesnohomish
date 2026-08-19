@@ -48,12 +48,7 @@ export async function GET(request: Request) {
     userId: data.user?.id ?? null,
   });
 
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const destination = process.env.NODE_ENV === 'development'
-    ? `${requestUrl.origin}${safeNext}`
-    : forwardedHost
-      ? `https://${forwardedHost}${safeNext}`
-      : `${requestUrl.origin}${safeNext}`;
+  const destination = `${requestUrl.origin}${safeNext}`;
   console.info('[OAuth callback] final redirect', { destination });
   return NextResponse.redirect(destination);
 }

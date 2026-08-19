@@ -83,7 +83,8 @@ export function CheckoutClient({ settings, bands }: { settings: CheckoutSettings
     localStorage.setItem(checkoutDraftKey, JSON.stringify(draft));
     sessionStorage.setItem(checkoutAuthKey, '1');
     const next = '/checkout';
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`, scopes: 'openid email profile' } });
+    const callbackOrigin = window.location.hostname === 'thesnohomish.com' ? 'https://www.thesnohomish.com' : window.location.origin;
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${callbackOrigin}/auth/callback?next=${encodeURIComponent(next)}`, scopes: 'openid email profile' } });
     if (oauthError) { sessionStorage.removeItem(checkoutAuthKey); setAuthError(oauthError.message); }
   }
   function chooseSavedAddress(id: string) {
