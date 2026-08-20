@@ -35,8 +35,6 @@ export async function POST(request: NextRequest) {
     const auth = await createServerSupabase();
     const { data: authData } = auth ? await auth.auth.getUser() : { data: { user: null } };
     const productIds = [...new Set(body.cart.map(item => item.productId))];
-    // These are the current copied-project fields. In particular, do not query
-    // legacy stock_quantity/available/published or optional discount-date fields.
     const { data: liveProducts, error: productsError } = await db.from('products').select('id,name,price,stock,is_active,track_inventory,product_variants(id,name,price,stock,is_active)').in('id', productIds);
     if (productsError) throw productsError;
     const products = (liveProducts || []) as LiveProduct[];
@@ -82,6 +80,7 @@ export async function POST(request: NextRequest) {
     const deliveryFee = isPickup || subtotal >= 10000 ? 0 : Number(band?.fee || 0);
     const total = subtotal + deliveryFee, orderNumber = `CH-${Date.now().toString(36).toUpperCase()}`;
     const paymentStatus = body.paymentMethod === 'mpesa' ? 'pending_payment' : body.paymentMethod === 'cash' ? 'cash_due' : 'pending';
+    const orderStatus = body.paymentMethod === 'mpesa' ? 'awaiting_payment' : 'pending';
 
     let customerId: string | null = null, deliveryLocationId: string | null = null;
     if (authData.user) {
@@ -97,31 +96,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data: order, error: orderError } = await db.from('orders').insert({ customer_id: customerId, delivery_location_id: deliveryLocationId, order_number: orderNumber, customer_name: body.customer.name.trim(), customer_email: body.customer.email?.trim() || null, customer_phone: body.customer.phone, delivery_address: isPickup ? 'Store pickup' : body.customer.address.trim(), gps_lat: hasCoordinates ? body.customer.latitude : null, gps_lng: hasCoordinates ? body.customer.longitude : null, delivery_place_id: body.customer.placeId || null, delivery_place_name: body.customer.placeName || null, delivery_location_verified: Boolean(body.customer.locationVerified), delivery_instructions: body.customer.deliveryInstructions?.trim() || null, gift_note: body.giftNote?.trim() || null, payment_method: body.paymentMethod, payment_status: paymentStatus, status: body.paymentMethod === 'mpesa' ? 'pending_payment' : 'pending', subtotal, delivery_fee: deliveryFee, discount_total: 0, total }).select('id,order_number,checkout_token').single();
+    const { data: order, error: orderError } = await db.from('orders').insert({ customer_id: customerId, delivery_location_id: deliveryLocationId, order_number: orderNumber, customer_name: body.customer.name.trim(), customer_email: body.customer.email?.trim() || null, customer_phone: body.customer.phone, delivery_address: isPickup ? 'Store pickup' : body.customer.address.trim(), gps_lat: hasCoordinates ? body.customer.latitude : null, gps_lng: hasCoordinates ? body.customer.longitude : null, delivery_place_id: body.customer.placeId || null, delivery_place_name: body.customer.placeName || null, delivery_location_verified: Boolean(body.customer.locationVerified), delivery_instructions: body.customer.deliveryInstructions?.trim() || null, gift_note: body.giftNote?.trim() || null, payment_method: body.paymentMethod, payment_status: paymentStatus, status: orderStatus, subtotal, delivery_fee: deliveryFee, discount_total: 0, total }).select('id,order_number,checkout_token').single();
     if (orderError || !order) throw orderError || new Error('Could not create your order.');
     const { error: itemsError } = await db.from('order_items').insert(items.map(item => ({ ...item, order_id: order.id })));
     if (itemsError) { await db.from('orders').delete().eq('id', order.id); throw itemsError; }
 
     const orderLines = items.map(item => `${item.quantity} × ${item.product_name} — KES ${Number(item.line_total).toLocaleString('en-KE')}`).join('\n');
     const summary = `Order ${order.order_number}\nCustomer: ${body.customer.name}\nPhone: ${body.customer.phone}\nAddress: ${isPickup ? 'Store pickup' : body.customer.address}\n${km == null ? '' : `Distance: ${km.toFixed(1)} km\n`}Payment: ${body.paymentMethod}\nDelivery: KES ${deliveryFee.toLocaleString('en-KE')}\nTotal: KES ${total.toLocaleString('en-KE')}\n\nProducts:\n${orderLines}`;
-    await db.from('admin_notifications').insert({ order_id: order.id, kind: 'new_order', title: `New order ${order.order_number}`, body: summary });
     const emailOrder: EmailOrder = { id: order.id, orderNumber: order.order_number, customerName: body.customer.name.trim(), customerEmail: body.customer.email?.trim() || null, customerPhone: body.customer.phone, deliveryAddress: isPickup ? 'Store pickup' : body.customer.address.trim(), paymentMethod: body.paymentMethod, subtotal, deliveryFee, total, estimatedDelivery: isPickup ? 'Ready-time confirmation will follow' : band ? `${band.estimated_minutes_min}–${band.estimated_minutes_max} minutes` : 'Delivery estimate will follow', items: items.map(item => ({ name: String(item.product_name), quantity: Number(item.quantity), unitPrice: Number(item.unit_price), lineTotal: Number(item.line_total) })) };
-    const emailTasks: Array<Promise<unknown>> = [];
-    if (emailOrder.customerEmail) emailTasks.push(sendOrderEmail(db, emailOrder, 'placed', emailOrder.customerEmail));
-    if (process.env.ADMIN_ORDER_EMAIL) emailTasks.push(sendOrderEmail(db, emailOrder, 'new_order_admin', process.env.ADMIN_ORDER_EMAIL));
-    await Promise.all(emailTasks);
+
     if (body.paymentMethod === 'mpesa') {
       const phone = kenyaPhone(body.customer.phone);
       try {
         const stk = await requestStkPush({ amount: total, phone, accountReference: order.order_number, description: 'The Snohomish order' });
         await db.from('payments').insert({ order_id: order.id, provider: 'mpesa', status: 'pending', amount: total, phone_number: phone, merchant_request_id: stk.merchantRequestId, checkout_request_id: stk.checkoutRequestId });
-        return NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus: 'pending_payment', subtotal, deliveryFee, distanceKm: km, total, message: 'Check your phone and enter your M-Pesa PIN to complete payment.' });
+        const response = NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus: 'pending_payment', subtotal, deliveryFee, distanceKm: km, total, message: 'Check your phone and enter your M-Pesa PIN to complete payment.' });
+        response.cookies.set('snohomish_order_token', order.checkout_token, { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 30 });
+        return response;
       } catch (error) {
-        await db.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
+        await db.from('orders').update({ payment_status: 'failed', status: 'awaiting_payment' }).eq('id', order.id);
         return NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus: 'failed', error: error instanceof Error ? error.message : 'M-Pesa could not start.' }, { status: 502 });
       }
     }
-    return NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus, subtotal, deliveryFee, distanceKm: km, total });
+
+    await db.from('admin_notifications').insert({ order_id: order.id, kind: 'new_order', title: `New order ${order.order_number}`, body: summary });
+    const emailTasks: Array<Promise<unknown>> = [];
+    if (emailOrder.customerEmail) emailTasks.push(sendOrderEmail(db, emailOrder, 'placed', emailOrder.customerEmail));
+    if (process.env.ADMIN_ORDER_EMAIL) emailTasks.push(sendOrderEmail(db, emailOrder, 'new_order_admin', process.env.ADMIN_ORDER_EMAIL));
+    await Promise.all(emailTasks);
+
+    const response = NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus, subtotal, deliveryFee, distanceKm: km, total });
+    response.cookies.set('snohomish_order_token', order.checkout_token, { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 30 });
+    return response;
   } catch (error) {
     console.error('[Checkout order]', error);
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to place your order.' }, { status: 400 });
