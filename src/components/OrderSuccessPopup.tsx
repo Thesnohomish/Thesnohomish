@@ -19,15 +19,19 @@ export function OrderSuccessPopup() {
   useEffect(() => {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let attempts = 0;
 
+    const hasTrackingCookie = () => document.cookie.split(';').some(part => part.trim().startsWith('snohomish_order_token='));
     const clearTrackingCookie = () => {
       document.cookie = 'snohomish_order_token=; Max-Age=0; path=/; SameSite=Lax';
     };
 
     const check = async () => {
-      if (stopped || attempts >= 90) return;
-      attempts += 1;
+      if (stopped) return;
+      if (!hasTrackingCookie()) {
+        timer = setTimeout(check, 1500);
+        return;
+      }
+
       try {
         const response = await fetch('/api/checkout/status', { cache: 'no-store' });
         if (response.ok) {
@@ -44,12 +48,11 @@ export function OrderSuccessPopup() {
             clearTrackingCookie();
             return;
           }
-        } else if (response.status === 404) {
-          return;
         }
       } catch {
-        // A temporary network failure should not prevent a later payment callback check.
+        // Temporary network errors are retried below.
       }
+
       timer = setTimeout(check, 2000);
     };
 
