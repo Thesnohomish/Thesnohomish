@@ -11,6 +11,7 @@ type Order = {
   order_number?: string;
   created_at: string;
   updated_at?: string;
+  dispatched_at?: string | null;
   customer_name?: string;
   customer_phone?: string;
   delivery_address?: string;
@@ -25,13 +26,12 @@ type Order = {
 
 type Connection = "connecting" | "live" | "polling" | "error";
 const PAGE_SIZE = 20;
-const unreviewedStatuses = new Set(["pending", "pending_payment", "paid"]);
 const statusOptions = [
   "pending",
   "confirmed",
   "processing",
   "out_for_delivery",
-  "delivered",
+  "paid",
   "rejected",
   "cancelled",
 ];
@@ -42,8 +42,8 @@ const transitions: Record<string, string[]> = {
   accepted: ["processing", "out_for_delivery", "rejected", "cancelled"],
   confirmed: ["processing", "out_for_delivery", "rejected", "cancelled"],
   processing: ["out_for_delivery", "rejected", "cancelled"],
-  dispatched: ["delivered", "cancelled"],
-  out_for_delivery: ["delivered", "cancelled"],
+  dispatched: ["paid", "cancelled"],
+  out_for_delivery: ["paid", "cancelled"],
   delivered: [],
   rejected: [],
   cancelled: [],
@@ -53,14 +53,16 @@ const statusLabel = (value: string) =>
     ? "New"
     : value === "accepted"
       ? "Confirmed"
-      : value === "out_for_delivery"
+      : value === "out_for_delivery" || value === "dispatched"
         ? "Out for delivery"
-        : value;
+        : value === "paid"
+          ? "Paid"
+          : value.charAt(0).toUpperCase() + value.slice(1).replaceAll("_", " ");
 const statusClass = (value: string) =>
   ({
     pending: "bg-blue-100 text-blue-800",
     pending_payment: "bg-amber-100 text-amber-800",
-    paid: "bg-blue-100 text-blue-800",
+    paid: "bg-green-100 text-green-800",
     confirmed: "bg-indigo-100 text-indigo-800",
     accepted: "bg-indigo-100 text-indigo-800",
     processing: "bg-purple-100 text-purple-800",
@@ -71,32 +73,36 @@ const statusClass = (value: string) =>
     cancelled: "bg-neutral-200 text-neutral-700",
   })[value] || "bg-neutral-100 text-neutral-700";
 
+function transitionsFor(order: Order) {
+  if (order.status === "paid" && order.dispatched_at) return [];
+  return transitions[order.status] || [];
+}
+
 export default function OrdersPage() {
   const supabase = useMemo(() => createBrowserSupabase(), []);
-  const [orders, setOrders] = useState<Order[]>([]),
-    [query, setQuery] = useState(""),
-    [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(true),
-    [refreshing, setRefreshing] = useState(false),
-    [error, setError] = useState("");
-  const [connection, setConnection] = useState<Connection>("connecting"),
-    [lastRefreshed, setLastRefreshed] = useState<Date | null>(null),
-    [page, setPage] = useState(1);
-  const [alertOrder, setAlertOrder] = useState<Order | null>(null),
-    [highlighted, setHighlighted] = useState<Set<string>>(new Set()),
-    [notice, setNotice] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const [connection, setConnection] = useState<Connection>("connecting");
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [page, setPage] = useState(1);
+  const [alertOrder, setAlertOrder] = useState<Order | null>(null);
+  const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
+  const [notice, setNotice] = useState("");
   const acknowledged = useRef<Set<string>>(new Set());
   const seenOrders = useRef<Set<string>>(new Set());
 
-  const mergeOrder = useCallback(
-    (incoming: Order) =>
-      setOrders((current) =>
-        [incoming, ...current.filter((order) => order.id !== incoming.id)].sort(
-          (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
-        ),
+  const mergeOrder = useCallback((incoming: Order) => {
+    setOrders((current) =>
+      [incoming, ...current.filter((order) => order.id !== incoming.id)].sort(
+        (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
       ),
-    [],
-  );
+    );
+  }, []);
+
   const load = useCallback(
     async (foreground = false) => {
       if (!supabase) {
@@ -104,7 +110,7 @@ export default function OrdersPage() {
         setLoading(false);
         return;
       }
-      foreground ? setRefreshing(true) : undefined;
+      if (foreground) setRefreshing(true);
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
         setError("Sign in as an administrator to view orders.");
@@ -122,7 +128,7 @@ export default function OrdersPage() {
       const { data, error: requestError } = await supabase
         .from("orders")
         .select(
-          "id,order_number,created_at,updated_at,customer_name,customer_phone,delivery_address,payment_method,payment_status,delivery_fee,total,status,delivery_location_verified,order_items(count)",
+          "id,order_number,created_at,updated_at,dispatched_at,customer_name,customer_phone,delivery_address,payment_method,payment_status,delivery_fee,total,status,delivery_location_verified,order_items(count)",
         )
         .order("created_at", { ascending: false })
         .limit(250);
@@ -144,7 +150,7 @@ export default function OrdersPage() {
       const { data } = await supabase
         .from("orders")
         .select(
-          "id,order_number,created_at,updated_at,customer_name,customer_phone,delivery_address,payment_method,payment_status,delivery_fee,total,status,delivery_location_verified,order_items(count)",
+          "id,order_number,created_at,updated_at,dispatched_at,customer_name,customer_phone,delivery_address,payment_method,payment_status,delivery_fee,total,status,delivery_location_verified,order_items(count)",
         )
         .eq("id", id)
         .maybeSingle();
@@ -155,10 +161,9 @@ export default function OrdersPage() {
 
   const playAlert = useCallback(() => {
     try {
-      const AudioContextClass = window.AudioContext;
-      const context = new AudioContextClass();
-      const oscillator = context.createOscillator(),
-        gain = context.createGain();
+      const context = new window.AudioContext();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
       oscillator.frequency.setValueAtTime(880, context.currentTime);
       oscillator.frequency.exponentialRampToValueAtTime(
         660,
@@ -171,7 +176,7 @@ export default function OrdersPage() {
       oscillator.start();
       oscillator.stop(context.currentTime + 0.28);
     } catch {
-      /* Browsers may require an earlier user gesture for sound. */
+      // Sound alerts can be blocked until the browser receives a user gesture.
     }
   }, []);
 
@@ -181,15 +186,13 @@ export default function OrdersPage() {
       setAlertOrder(order);
       setHighlighted((current) => new Set(current).add(order.id));
       playAlert();
-      window.setTimeout(
-        () =>
-          setHighlighted((current) => {
-            const next = new Set(current);
-            next.delete(order.id);
-            return next;
-          }),
-        8000,
-      );
+      window.setTimeout(() => {
+        setHighlighted((current) => {
+          const next = new Set(current);
+          next.delete(order.id);
+          return next;
+        });
+      }, 8000);
     },
     [playAlert],
   );
@@ -212,15 +215,14 @@ export default function OrdersPage() {
   useEffect(() => {
     try {
       acknowledged.current = new Set(
-        JSON.parse(
-          localStorage.getItem("chupahub-acknowledged-orders") || "[]",
-        ),
+        JSON.parse(localStorage.getItem("snohomish-acknowledged-orders") || "[]"),
       );
     } catch {
       acknowledged.current = new Set();
     }
     void load();
   }, [load]);
+
   useEffect(() => {
     if (!supabase) return;
     setConnection("connecting");
@@ -259,16 +261,17 @@ export default function OrdersPage() {
       document.removeEventListener("visibilitychange", visible);
       void supabase.removeChannel(channel);
     };
-  }, [announce, fetchOrder, load, mergeOrder, supabase]);
+  }, [fetchOrder, load, mergeOrder, supabase]);
 
   function acknowledge(id: string) {
     acknowledged.current.add(id);
     localStorage.setItem(
-      "chupahub-acknowledged-orders",
+      "snohomish-acknowledged-orders",
       JSON.stringify([...acknowledged.current].slice(-500)),
     );
     setAlertOrder((current) => (current?.id === id ? null : current));
   }
+
   async function changeStatus(order: Order, nextStatus: string) {
     if (
       (nextStatus === "rejected" || nextStatus === "cancelled") &&
@@ -309,7 +312,8 @@ export default function OrdersPage() {
       !status ||
       order.status === status ||
       (status === "pending" &&
-        ["pending_payment", "paid"].includes(order.status)) ||
+        (order.status === "pending_payment" ||
+          (order.status === "paid" && !order.dispatched_at))) ||
       (status === "confirmed" && order.status === "accepted");
     return (
       matchesStatus &&
@@ -318,13 +322,17 @@ export default function OrdersPage() {
         .includes(query.toLowerCase())
     );
   });
-  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
-    visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const unreviewed = orders.filter(
     (order) =>
-      unreviewedStatuses.has(order.status) &&
+      (order.status === "pending" ||
+        order.status === "pending_payment" ||
+        (order.status === "paid" && !order.dispatched_at)) &&
       !acknowledged.current.has(order.id),
   ).length;
+
   useEffect(() => setPage(1), [query, status]);
 
   return (
@@ -370,18 +378,21 @@ export default function OrdersPage() {
           </Link>
         </div>
       </div>
+
       <p className="mt-2 text-xs text-neutral-500">
         Last refreshed:{" "}
         {lastRefreshed
           ? lastRefreshed.toLocaleTimeString()
           : "waiting for first refresh"}
       </p>
+
       {notice && (
         <p className="mt-4 rounded-xl bg-green-50 p-3 font-bold text-green-800">
           <Check className="mr-2 inline" size={18} />
           {notice}
         </p>
       )}
+
       {alertOrder && (
         <aside
           role="alert"
@@ -421,6 +432,7 @@ export default function OrdersPage() {
           </div>
         </aside>
       )}
+
       <div className="mt-5 flex flex-wrap gap-3">
         <input
           value={query}
@@ -441,6 +453,7 @@ export default function OrdersPage() {
           ))}
         </select>
       </div>
+
       {loading ? (
         <p className="mt-8">Loading orders…</p>
       ) : error ? (
@@ -474,7 +487,7 @@ export default function OrdersPage() {
                   "Delivery",
                   "Total",
                   "Status",
-                  "Update",
+                  "Actions",
                 ].map((label) => (
                   <th key={label} className="p-3">
                     {label}
@@ -483,92 +496,97 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((order) => (
-                <tr
-                  key={order.id}
-                  className={`border-t transition-colors duration-700 ${highlighted.has(order.id) ? "bg-orange-100" : ""}`}
-                >
-                  <td className="p-3 font-bold">
-                    <Link
-                      className="text-brand-orange"
-                      href={`/admin/orders/${order.id}`}
-                    >
-                      {order.order_number || order.id.slice(0, 8)}
-                    </Link>
-                  </td>
-                  <td className="whitespace-nowrap p-3">
-                    {new Date(order.created_at).toLocaleString()}
-                  </td>
-                  <td className="p-3">{order.customer_name || "Guest"}</td>
-                  <td className="p-3">
-                    <a href={`tel:${order.customer_phone || ""}`}>
-                      {order.customer_phone || "—"}
-                    </a>
-                  </td>
-                  <td className="max-w-48 truncate p-3">
-                    {order.delivery_address || "—"}
-                    {order.delivery_location_verified === false && (
-                      <small className="block font-bold text-red-600">
-                        Location not verified
-                      </small>
-                    )}
-                  </td>
-                  <td className="p-3">{order.order_items?.[0]?.count || 0}</td>
-                  <td className="p-3">
-                    {order.payment_method}
-                    <br />
-                    <small>{order.payment_status}</small>
-                  </td>
-                  <td className="p-3">{money(order.delivery_fee)}</td>
-                  <td className="p-3 font-bold">{money(order.total)}</td>
-                  <td className="p-3">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-black capitalize ${statusClass(order.status)}`}
-                    >
-                      {statusLabel(order.status)}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <select
-                      aria-label={`Update order ${order.order_number || order.id}`}
-                      value=""
-                      onChange={(event) =>
-                        event.target.value &&
-                        void changeStatus(order, event.target.value)
-                      }
-                      className="rounded-lg border bg-white p-2"
-                      disabled={!transitions[order.status]?.length}
-                    >
-                      <option value="">
-                        {transitions[order.status]?.length
-                          ? "Change status…"
-                          : "No actions"}
-                      </option>
-                      {(transitions[order.status] || [])
-                        .filter((value) => value !== "out_for_delivery")
-                        .map((value) => (
-                          <option key={value} value={value}>
-                            {statusLabel(value)}
-                          </option>
-                        ))}
-                    </select>
-                    {(transitions[order.status] || []).includes(
-                      "out_for_delivery",
-                    ) && (
+              {visible.map((order) => {
+                const availableTransitions = transitionsFor(order);
+                return (
+                  <tr
+                    key={order.id}
+                    className={`border-t transition-colors duration-700 ${highlighted.has(order.id) ? "bg-orange-100" : ""}`}
+                  >
+                    <td className="p-3 font-bold">
+                      <Link
+                        className="text-brand-orange underline-offset-2 hover:underline"
+                        href={`/admin/orders/${order.id}`}
+                      >
+                        {order.order_number || order.id.slice(0, 8)}
+                      </Link>
+                    </td>
+                    <td className="whitespace-nowrap p-3">
+                      {new Date(order.created_at).toLocaleString()}
+                    </td>
+                    <td className="p-3">{order.customer_name || "Guest"}</td>
+                    <td className="p-3">
+                      <a href={`tel:${order.customer_phone || ""}`}>
+                        {order.customer_phone || "—"}
+                      </a>
+                    </td>
+                    <td className="max-w-48 truncate p-3">
+                      {order.delivery_address || "—"}
+                      {order.delivery_location_verified === false && (
+                        <small className="block font-bold text-red-600">
+                          Location not verified
+                        </small>
+                      )}
+                    </td>
+                    <td className="p-3">{order.order_items?.[0]?.count || 0}</td>
+                    <td className="p-3">
+                      {order.payment_method}
+                      <br />
+                      <small className="capitalize">{order.payment_status}</small>
+                    </td>
+                    <td className="p-3">{money(order.delivery_fee)}</td>
+                    <td className="p-3 font-bold">{money(order.total)}</td>
+                    <td className="p-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-black ${statusClass(order.status)}`}
+                      >
+                        {statusLabel(order.status)}
+                      </span>
+                    </td>
+                    <td className="min-w-44 p-3">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="mt-2 block whitespace-nowrap font-black text-brand-orange"
+                        className="inline-flex rounded-lg border border-brand-orange px-3 py-2 font-black text-brand-orange"
                       >
-                        Add rider &amp; dispatch →
+                        View order
                       </Link>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      {availableTransitions.includes("out_for_delivery") && (
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="mt-2 block whitespace-nowrap font-black text-brand-orange"
+                        >
+                          Add rider &amp; dispatch →
+                        </Link>
+                      )}
+                      {availableTransitions.length > 0 && (
+                        <select
+                          aria-label={`Update order ${order.order_number || order.id}`}
+                          value=""
+                          onChange={(event) =>
+                            event.target.value &&
+                            void changeStatus(order, event.target.value)
+                          }
+                          className="mt-2 w-full rounded-lg border bg-white p-2"
+                        >
+                          <option value="">Change status…</option>
+                          {availableTransitions
+                            .filter((value) => value !== "out_for_delivery")
+                            .map((value) => (
+                              <option key={value} value={value}>
+                                {value === "paid" ? "Mark Paid" : statusLabel(value)}
+                              </option>
+                            ))}
+                        </select>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
+
       {pages > 1 && (
         <div className="mt-5 flex items-center justify-center gap-3">
           <button
