@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     const emailTasks: Array<Promise<unknown>> = [];
     if (emailOrder.customerEmail) emailTasks.push(sendOrderEmail(db, emailOrder, 'placed', emailOrder.customerEmail));
     if (process.env.ADMIN_ORDER_EMAIL) emailTasks.push(sendOrderEmail(db, emailOrder, 'new_order_admin', process.env.ADMIN_ORDER_EMAIL));
-    emailTasks.push(sendOrderSms(db, { id: order.id, orderNumber: order.order_number, customerPhone: body.customer.phone, total }, 'placed'));
+    emailTasks.push(sendOrderSms(db, { id: order.id, orderNumber: order.order_number, customerPhone: body.customer.phone, customerName: body.customer.name.trim(), total }, 'placed'));
     await Promise.all(emailTasks);
 
     const response = NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus, subtotal, deliveryFee, distanceKm: km, total });
