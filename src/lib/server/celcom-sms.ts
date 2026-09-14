@@ -8,10 +8,19 @@ export type SmsDeliveryResult = {
 };
 
 export function kenyaSmsPhone(value: string) {
-  const digits = value.replace(/\D/g, '');
-  if (/^(?:0)?[17]\d{8}$/.test(digits)) return `254${digits.replace(/^0/, '')}`;
-  if (/^254[17]\d{8}$/.test(digits)) return digits;
-  throw new Error('Enter a valid Kenyan mobile number.');
+  const input = value.trim();
+  const digits = input.replace(/\D/g, '');
+
+  // Kenyan local mobile formats: 07XXXXXXXX and 01XXXXXXXX.
+  if (/^0[17]\d{8}$/.test(digits)) return `254${digits.slice(1)}`;
+  // Kenyan mobile without the local zero.
+  if (/^[17]\d{8}$/.test(digits)) return `254${digits}`;
+  // International format beginning with 00.
+  const international = digits.startsWith('00') ? digits.slice(2) : digits;
+  // E.164 permits a country code followed by up to 14 more digits.
+  if (/^[1-9]\d{7,14}$/.test(international)) return international;
+
+  throw new Error('Enter a valid phone number beginning with +country code, 00country code, 07, or 01.');
 }
 
 function responseRecord(payload: unknown): Record<string, unknown> {
