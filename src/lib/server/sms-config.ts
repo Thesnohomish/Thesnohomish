@@ -17,14 +17,16 @@ function smsEndpoint(value?: string) {
 }
 
 export function getSmsConfig() {
-  // Accept the recommended names and the labels already used in the Vercel project.
   const apiKey = firstEnvironmentValue(
     'CELCOM_SMS_API_KEY',
     'CELCOM_API_KEY',
     'ApiKey',
     'APIKEY',
     'API_KEY',
+    'API Key',
     'Api Key',
+    'Api key',
+    'apikey',
   );
   const partnerId = firstEnvironmentValue(
     'CELCOM_SMS_PARTNER_ID',
