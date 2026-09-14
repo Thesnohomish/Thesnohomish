@@ -7,6 +7,7 @@ export type SmsOrder = {
   id: string;
   orderNumber: string;
   customerPhone: string;
+  customerName?: string | null;
   total: number;
   riderName?: string | null;
   riderPhone?: string | null;
@@ -14,8 +15,8 @@ export type SmsOrder = {
 
 export function orderSmsText(order: SmsOrder, event: OrderSmsEvent) {
   if (event === 'dispatched')
-    return `The Snohomish: Order ${order.orderNumber} is out for delivery. Rider: ${order.riderName || 'assigned rider'}, ${order.riderPhone || 'contact the store'}. Thank you.`;
-  return `The Snohomish: We have received order ${order.orderNumber}. Total KES ${Number(order.total).toLocaleString('en-KE')}. We will update you when it is out for delivery.`;
+    return `Hi ${order.customerName || 'there'}! Your order ${order.orderNumber} is on the way. Rider: ${order.riderName || 'assigned rider'}, ${order.riderPhone || 'contact the store'}. See you soon!`;
+  return `Hi ${order.customerName || 'there'}! Great news - order ${order.orderNumber} is confirmed and we are preparing it now. Total KES ${Number(order.total).toLocaleString('en-KE')}. We will text you when it is out for delivery.`;
 }
 
 async function deliverAndLog(order: SmsOrder, event: OrderSmsEvent, recipient: string, attemptsBefore = 0) {
