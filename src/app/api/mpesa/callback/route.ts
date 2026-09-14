@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
             ),
           );
         if (order.customer_phone)
-          emailTasks.push(sendOrderSms(db, { id: order.id, orderNumber: order.order_number, customerPhone: order.customer_phone, total: Number(order.total) }, 'placed'));
+          emailTasks.push(sendOrderSms(db, { id: order.id, orderNumber: order.order_number, customerPhone: order.customer_phone, customerName: order.customer_name || 'Customer', total: Number(order.total) }, 'placed'));
         await Promise.all(emailTasks);
       }
     }
