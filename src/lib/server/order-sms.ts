@@ -9,6 +9,7 @@ export type SmsOrder = {
   customerPhone: string;
   customerName?: string | null;
   total: number;
+  subtotal?: number;
   riderName?: string | null;
   riderPhone?: string | null;
 };
@@ -16,7 +17,8 @@ export type SmsOrder = {
 export function orderSmsText(order: SmsOrder, event: OrderSmsEvent) {
   if (event === 'dispatched')
     return `Hi ${order.customerName || 'there'}! Your order ${order.orderNumber} is on the way. Rider: ${order.riderName || 'assigned rider'}, ${order.riderPhone || 'contact the store'}. See you soon!`;
-  return `Hi ${order.customerName || 'there'}! Great news - order ${order.orderNumber} is confirmed and we are preparing it now. Total KES ${Number(order.total).toLocaleString('en-KE')}. We will text you when it is out for delivery.`;
+  const loyaltyPoints = Math.floor(Number(order.subtotal ?? order.total) / 1000) * 10;
+  return `Hi ${order.customerName || 'there'}! Your order ${order.orderNumber} is in! We are getting everything ready for you. Total including delivery: KES ${Number(order.total).toLocaleString('en-KE')}. You have earned ${loyaltyPoints} loyalty points. We will text you when it is on the way.`;
 }
 
 async function deliverAndLog(order: SmsOrder, event: OrderSmsEvent, recipient: string, attemptsBefore = 0) {
