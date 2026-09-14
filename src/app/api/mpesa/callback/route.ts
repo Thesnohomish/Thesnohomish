@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/server/supabase-admin';
 import { sendOrderEmail, type EmailOrder } from '@/lib/server/order-email';
+import { sendOrderSms } from '@/lib/server/order-sms';
 
 export async function POST(request: NextRequest) {
   try {
@@ -113,6 +114,8 @@ export async function POST(request: NextRequest) {
               process.env.ADMIN_ORDER_EMAIL,
             ),
           );
+        if (order.customer_phone)
+          emailTasks.push(sendOrderSms(db, { id: order.id, orderNumber: order.order_number, customerPhone: order.customer_phone, total: Number(order.total) }, 'placed'));
         await Promise.all(emailTasks);
       }
     }

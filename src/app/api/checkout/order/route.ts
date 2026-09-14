@@ -3,6 +3,7 @@ import { kenyaPhone, requestStkPush } from '@/lib/server/mpesa';
 import { getAdminSupabase } from '@/lib/server/supabase-admin';
 import { createServerSupabase } from '@/lib/supabase-server';
 import { sendOrderEmail, type EmailOrder } from '@/lib/server/order-email';
+import { sendOrderSms } from '@/lib/server/order-sms';
 
 type CartLine = { productId: string; variantId?: string; quantity: number; name?: string };
 type LiveVariant = { id: string; name: string; price: number; stock: number | null; is_active: boolean | null };
@@ -123,6 +124,7 @@ export async function POST(request: NextRequest) {
     const emailTasks: Array<Promise<unknown>> = [];
     if (emailOrder.customerEmail) emailTasks.push(sendOrderEmail(db, emailOrder, 'placed', emailOrder.customerEmail));
     if (process.env.ADMIN_ORDER_EMAIL) emailTasks.push(sendOrderEmail(db, emailOrder, 'new_order_admin', process.env.ADMIN_ORDER_EMAIL));
+    emailTasks.push(sendOrderSms(db, { id: order.id, orderNumber: order.order_number, customerPhone: body.customer.phone, total }, 'placed'));
     await Promise.all(emailTasks);
 
     const response = NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus, subtotal, deliveryFee, distanceKm: km, total });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/server/supabase-admin';
 import { sendOrderEmail, type EmailOrder, type OrderEmailEvent } from '@/lib/server/order-email';
+import { sendOrderSms } from '@/lib/server/order-sms';
 
 const allowed: Record<string, string[]> = {
   pending: ['confirmed', 'rejected', 'cancelled'],
@@ -155,6 +156,8 @@ export async function PATCH(
       title: `Order ${order.order_number} dispatched`,
       body: text,
     });
+    if (order.customer_phone)
+      await sendOrderSms(admin.db, { id: order.id, orderNumber: order.order_number, customerPhone: order.customer_phone, total: Number(order.total), riderName, riderPhone }, 'dispatched');
   }
 
   return NextResponse.json({ ok: true, order: updated });
