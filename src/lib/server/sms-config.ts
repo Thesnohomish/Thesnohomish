@@ -1,10 +1,44 @@
 const DEFAULT_ENDPOINT = 'https://isms.celcomafrica.com/api/services/sendsms';
 
+function firstEnvironmentValue(...names: string[]) {
+  for (const name of names) {
+    const value = process.env[name]?.trim();
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function smsEndpoint(value?: string) {
+  if (!value) return DEFAULT_ENDPOINT;
+  const normalized = value.replace(/\/$/, '');
+  return normalized.endsWith('/api/services/sendsms')
+    ? normalized
+    : `${normalized}/api/services/sendsms`;
+}
+
 export function getSmsConfig() {
-  const apiKey = process.env.CELCOM_SMS_API_KEY?.trim();
-  const partnerId = process.env.CELCOM_SMS_PARTNER_ID?.trim();
-  const shortcode = process.env.CELCOM_SMS_SHORTCODE?.trim();
-  const endpoint = process.env.CELCOM_SMS_ENDPOINT?.trim() || DEFAULT_ENDPOINT;
+  // Accept the recommended names and the labels already used in the Vercel project.
+  const apiKey = firstEnvironmentValue(
+    'CELCOM_SMS_API_KEY',
+    'CELCOM_API_KEY',
+    'ApiKey',
+    'APIKEY',
+    'API_KEY',
+    'Api Key',
+  );
+  const partnerId = firstEnvironmentValue(
+    'CELCOM_SMS_PARTNER_ID',
+    'PartnerID',
+    'PARTNER_ID',
+  );
+  const shortcode = firstEnvironmentValue(
+    'CELCOM_SMS_SHORTCODE',
+    'Shortcode',
+    'SHORTCODE',
+  );
+  const endpoint = smsEndpoint(
+    firstEnvironmentValue('CELCOM_SMS_ENDPOINT', 'Url', 'URL'),
+  );
   const missing = [
     !apiKey ? 'CELCOM_SMS_API_KEY' : null,
     !partnerId ? 'CELCOM_SMS_PARTNER_ID' : null,
