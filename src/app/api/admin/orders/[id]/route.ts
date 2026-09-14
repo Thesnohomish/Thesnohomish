@@ -157,7 +157,7 @@ export async function PATCH(
       body: text,
     });
     if (order.customer_phone)
-      await sendOrderSms(admin.db, { id: order.id, orderNumber: order.order_number, customerPhone: order.customer_phone, total: Number(order.total), riderName, riderPhone }, 'dispatched');
+      await sendOrderSms(admin.db, { id: order.id, orderNumber: order.order_number, customerPhone: order.customer_phone, customerName: order.customer_name || 'Customer', total: Number(order.total), riderName, riderPhone }, 'dispatched');
   }
 
   return NextResponse.json({ ok: true, order: updated });
