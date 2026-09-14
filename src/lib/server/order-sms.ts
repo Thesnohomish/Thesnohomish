@@ -22,7 +22,11 @@ export async function sendOrderSms(db: SupabaseClient, order: SmsOrder, event: O
   const recipient = order.customerPhone?.trim();
   if (!recipient) return { status: 'skipped' as const, reason: 'No recipient' };
   const eventKey = `order_${event}`;
-  const { data: existing } = await db.from('notification_deliveries').select('id,status,attempts').eq('order_id', order.id).eq('channel', 'sms').eq('recipient', recipient).eq('event_key', eventKey).maybeSingle();
+  const { data: existing, error: lookupError } = await db.from('notification_deliveries').select('id,status,attempts').eq('order_id', order.id).eq('channel', 'sms').eq('recipient', recipient).eq('event_key', eventKey).maybeSingle();
+  if (lookupError) {
+    console.warn('[Order SMS] delivery log unavailable; sending without database claim', { orderId: order.id, event, code: lookupError.code });
+    return deliverSms(recipient, orderSmsText(order, event));
+  }
   if (existing?.status === 'sent' || existing?.status === 'pending')
     return { status: 'skipped' as const, reason: `Already ${existing.status}` };
   if (existing && Number(existing.attempts) >= MAX_ATTEMPTS)
