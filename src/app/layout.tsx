@@ -4,7 +4,7 @@ import { Footer, Header } from '@/components/Site';
 import { CartFeedback } from '@/components/CartFeedback';
 import { AgeGate } from '@/components/AgeGate';
 import { OrderSuccessPopup } from '@/components/OrderSuccessPopup';
-import { getProducts, getSiteContent } from '@/lib/supabase';
+import { getCategories, getSiteContent } from '@/lib/supabase';
 import { businessGraph, DEFAULT_DESCRIPTION, JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 import { getSupabaseConfig, serializeSupabaseConfig } from '@/lib/supabase-config';
 
@@ -52,19 +52,21 @@ export function generateMetadata(): Metadata {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [content, products] = await Promise.all([getSiteContent(), getProducts()]);
+  // Keep the global shell light: categories are enough for navigation. Shipping
+  // the full catalogue here made every page download and hydrate every product.
+  const [content, categories] = await Promise.all([getSiteContent(), getCategories()]);
   const publicSupabaseConfig = serializeSupabaseConfig(getSupabaseConfig());
   return (
     <html lang="en">
       <head><script dangerouslySetInnerHTML={{ __html: `window.__SNOHOMISH_SUPABASE__=${publicSupabaseConfig}` }} /></head>
       <body className="app-shell min-h-screen">
         <AgeGate />
-        <Header content={content} products={products} />
+        <Header content={content} categories={categories} />
         <CartFeedback />
         <OrderSuccessPopup />
         <JsonLd data={businessGraph([content.instagram_url || '', content.facebook_url || '', content.tiktok_url || ''])} />
         {children}
-        <Footer content={content} products={products} />
+        <Footer content={content} />
       </body>
     </html>
   );

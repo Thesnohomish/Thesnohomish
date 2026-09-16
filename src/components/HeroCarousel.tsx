@@ -50,7 +50,7 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
                   sizes="(min-width: 1532px) 1500px, calc(100vw - 2rem)"
                   position="center"
                   priority={index === 0}
-                  quality={100}
+                  quality={72}
                   fit="contain"
                   className={`hero-image ${visibleBanners.length > 1 ? "hero-image-transition" : ""}`}
                 />
@@ -62,7 +62,7 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
                   sizes="100vw"
                   position="center"
                   priority={index === 0}
-                  quality={100}
+                  quality={72}
                   fit="contain"
                   className={`hero-image hero-image-mobile ${visibleBanners.length > 1 ? "hero-image-transition" : ""}`}
                 />

@@ -60,6 +60,7 @@ body {
 .product-rail-arrow:hover{background:#E5D600}
 .product-rail-static{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
 .product-image-container{position:relative;display:flex;width:100%;aspect-ratio:1/1;align-items:center;justify-content:center;overflow:hidden;border:0;border-radius:0;background:#fff;isolation:isolate}
+.deferred-section{content-visibility:auto;contain-intrinsic-size:720px}
 .product-image{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:10px;background:#fff;clip-path:inset(1px);image-rendering:auto;filter:contrast(1.04) saturate(1.02)}
 .product-detail-image{height:clamp(350px,92vw,440px)}
 .product-detail-image .product-image-container{height:100%;aspect-ratio:auto}
@@ -119,6 +120,7 @@ body{background:#f5f4f0;color:#0d0d0d;overflow-x:hidden;font-family:ui-sans-seri
 @keyframes hero-image-zoom-first{0%,40%{transform:scale(1)}50%,90%{transform:scale(1.2)}100%{transform:scale(1)}}
 @keyframes hero-image-zoom-second{0%,40%{transform:scale(1.2)}50%,90%{transform:scale(1)}100%{transform:scale(1.2)}}
 @media(prefers-reduced-motion:reduce){.hero-image{will-change:auto}.hero-slide-animated,.hero-slide-animated .hero-image-transition{animation:none;transform:none}.hero-slide-animated{opacity:0}.hero-slide-animated:first-child{opacity:1}}
+@media(prefers-reduced-data:reduce){.hero-slide-animated,.hero-slide-animated .hero-image-transition,.marquee-track{animation:none!important;transform:none!important}.hero-slide-animated{display:none}.hero-slide-animated:first-child{display:block;opacity:1}.product-rail-scroll{scroll-behavior:auto}}
 
 /* Keep administration visually aligned with the black and Snohomish-yellow storefront theme. */
 .admin-shell{background:#f5f4f0;color:#0d0d0d}

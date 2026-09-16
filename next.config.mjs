@@ -3,7 +3,12 @@ const categoryRedirects = ['beer', 'wine', 'whisky', 'gin', 'vodka', 'champagne'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  images: { remotePatterns: [{ protocol: 'https', hostname: '**' }] },
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
+    formats: ['image/avif', 'image/webp'],
+    qualities: [64, 68, 72, 88, 95, 100],
+    minimumCacheTTL: 86400,
+  },
   poweredByHeader: false,
   async redirects() {
     return [

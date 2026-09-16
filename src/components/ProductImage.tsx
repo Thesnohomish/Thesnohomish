@@ -23,7 +23,7 @@ export function ProductImage({
         alt={alt}
         sizes={sizes}
         priority={priority}
-        quality={100}
+        quality={68}
         fit="contain"
         className="product-image"
       />
