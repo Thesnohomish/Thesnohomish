@@ -190,11 +190,11 @@ export default function OrderDetail({
             </h1>
             <p className="mt-1 capitalize text-neutral-600">
               {new Date(order.created_at).toLocaleString()} ·{" "}
-              {String(order.status).replaceAll("_", " ")}
+              {String(order.status).replace(/_/g, " ")}
             </p>
           </div>
           <span className="rounded-full bg-brand-soft px-3 py-2 text-sm font-black capitalize text-brand-ink">
-            {String(order.status).replaceAll("_", " ")}
+            {String(order.status).replace(/_/g, " ")}
           </span>
         </div>
 

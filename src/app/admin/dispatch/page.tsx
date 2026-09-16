@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { createBrowserSupabase } from "@/lib/supabase-browser";
 import { money } from "@/lib/supabase";
+import { compatibleId } from "@/lib/browser-compat";
 
 type Rider = { id: string; name: string; phone: string };
 type DispatchOrder = {
@@ -242,7 +243,7 @@ export default function DispatchPage() {
     if (!name.trim() || !phone.trim())
       return setError("Enter the rider name and phone number.");
     const next = {
-      id: crypto.randomUUID(),
+      id: compatibleId(),
       name: name.trim(),
       phone: phone.trim(),
     };
@@ -322,7 +323,7 @@ export default function DispatchPage() {
                       {order.customer_name || "Guest"} · {money(order.total)}
                     </small>
                     <span className="mt-1 block text-xs font-bold capitalize text-brand-orange">
-                      {order.status.replaceAll("_", " ")}
+                      {order.status.replace(/_/g, " ")}
                     </span>
                   </span>
                   <ChevronRight size={18} />
@@ -370,7 +371,7 @@ export default function DispatchPage() {
                   <div className="text-right">
                     <b className="text-xl">{money(activeOrder.total)}</b>
                     <p className="capitalize text-brand-orange">
-                      {activeOrder.status.replaceAll("_", " ")}
+                      {activeOrder.status.replace(/_/g, " ")}
                     </p>
                   </div>
                 </div>

@@ -58,7 +58,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const publicSupabaseConfig = serializeSupabaseConfig(getSupabaseConfig());
   return (
     <html lang="en">
-      <head><script dangerouslySetInnerHTML={{ __html: `window.__SNOHOMISH_SUPABASE__=${publicSupabaseConfig}` }} /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `if(!String.prototype.replaceAll){String.prototype.replaceAll=function(a,b){return this.split(a).join(b)}};window.__SNOHOMISH_SUPABASE__=${publicSupabaseConfig}` }} />
+      </head>
       <body className="app-shell min-h-screen">
         <AgeGate />
         <Header content={content} categories={categories} />

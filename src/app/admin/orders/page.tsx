@@ -57,7 +57,7 @@ const statusLabel = (value: string) =>
         ? "Out for delivery"
         : value === "paid"
           ? "Paid"
-          : value.charAt(0).toUpperCase() + value.slice(1).replaceAll("_", " ");
+          : value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
 const statusClass = (value: string) =>
   ({
     pending: "bg-blue-100 text-blue-800",
