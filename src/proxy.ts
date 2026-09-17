@@ -6,6 +6,13 @@ import { supabasePublicKey, supabaseUrl } from '@/lib/supabase';
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request });
   if (!supabaseUrl || !supabasePublicKey) return response;
+  // Anonymous storefront visitors have no session to refresh. Calling
+  // Supabase auth for them delays every public page before Next.js can serve
+  // its cached response, and becomes especially painful on slow connections.
+  const hasAuthSession = request.cookies.getAll().some(({ name }) =>
+    name.startsWith('sb-') && name.includes('-auth-token'),
+  );
+  if (!hasAuthSession) return response;
   const supabase = createClient(supabaseUrl, supabasePublicKey, {
     auth: {
       flowType: 'pkce',
