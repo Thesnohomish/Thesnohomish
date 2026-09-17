@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { ProductRail } from '@/components/Site';
 import { SmartImage } from '@/components/SmartImage';
-import { getBanners, getCategories, getHomepageSections, getProducts, getPromotions, money } from '@/lib/supabase';
+import { getBanners, getCategories, getHomepageProducts, getHomepageSections, getPromotions, money } from '@/lib/supabase';
 import { DEFAULT_DESCRIPTION } from '@/lib/seo';
 import { categoryCanonicalPath, stableCollectionSlug } from '@/lib/public-urls';
 import { ArrowRight, CarFront, Check, Clock3, Store } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Serve the storefront from Vercel's cache instead of making every visitor
+// wait for several Supabase requests. Content refreshes automatically.
+export const revalidate = 60;
 export const metadata: Metadata = {
   title: { absolute: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi' },
   description: DEFAULT_DESCRIPTION,
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 
 const stores = ['Mautamu', 'The Snohomish', 'Three Amigos'];
 export default async function Home() {
-  const [banners, categories, products, promotions, configuredSections] = await Promise.all([getBanners(), getCategories(), getProducts(), getPromotions(), getHomepageSections()]);
+  const [banners, categories, products, promotions, configuredSections] = await Promise.all([getBanners(), getCategories(), getHomepageProducts(), getPromotions(), getHomepageSections()]);
   const topSellers = products.filter(p => p.is_top_seller), featured = products.filter(p => p.is_featured);
   const categoryShowcase = categories.map(category=>({category,image:category.image_url||products.find(product=>product.categories?.slug===category.slug)?.image_url||'/premium-spirits-banner.svg'}));
   const homepageRows = configuredSections.map(section => {

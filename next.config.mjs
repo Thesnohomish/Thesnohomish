@@ -5,7 +5,8 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
-    formats: ['image/avif', 'image/webp'],
+    // Faster cold-start encoding and support for older Safari versions.
+    formats: ['image/webp'],
     qualities: [64, 68, 72, 88, 95, 100],
     minimumCacheTTL: 86400,
   },

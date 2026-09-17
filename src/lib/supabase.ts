@@ -28,7 +28,8 @@ async function supabaseFetch<T>(path: string, options: SupabaseFetchOptions = {}
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
       headers: { apikey: supabasePublicKey, Authorization: `Bearer ${supabasePublicKey}` },
-      ...(options.cache === 'no-store' ? { cache: 'no-store' as const } : { next: { revalidate: 5 } }),
+      ...(options.cache === 'no-store' ? { cache: 'no-store' as const } : { next: { revalidate: 60 } }),
+      signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) {
       const details = (await response.text()).slice(0, 1000);
@@ -58,7 +59,7 @@ export async function getCategory(slug: string): Promise<DbCategory | null> {
 
 export async function getBanners(): Promise<DbBanner[]> {
   const rows = await supabaseFetch<DbBanner>('homepage_banners?select=*&is_active=eq.true&order=sort_order.asc,created_at.desc', {
-    cache: 'no-store', resource: 'public homepage banners',
+    resource: 'public homepage banners',
   });
   const now = Date.now();
   const activeRows = rows.filter((row) => (!row.starts_at || Date.parse(row.starts_at) <= now) && (!row.ends_at || Date.parse(row.ends_at) >= now));
@@ -90,8 +91,16 @@ export async function getProducts(): Promise<DbProduct[]> {
   return supabaseFetch<DbProduct>('products?select=*,categories(name,slug),brands(name,country),product_variants(*)&is_active=eq.true&order=updated_at.desc,created_at.desc', { cache: 'no-store', resource: 'public products and relationships' });
 }
 
+/** Lightweight catalogue shape used only by homepage product cards. */
+export async function getHomepageProducts(): Promise<DbProduct[]> {
+  return supabaseFetch<DbProduct>(
+    'products?select=id,name,slug,price,old_price,discount_starts_at,discount_ends_at,discount_label,stock,image_url,bottle_size,country,abv,is_top_seller,is_featured,categories(name,slug),product_variants(id,name,price,old_price,discount_starts_at,discount_ends_at,discount_label,stock,image_url,is_active)&is_active=eq.true&order=updated_at.desc,created_at.desc',
+    { resource: 'homepage products' },
+  );
+}
+
 export async function getHomepageSections(): Promise<DbHomepageSection[]> {
-  return supabaseFetch<DbHomepageSection>('homepage_product_sections?select=*,categories(slug)&is_active=eq.true&order=sort_order.asc,created_at.asc', { cache: 'no-store', resource: 'public homepage product sections' });
+  return supabaseFetch<DbHomepageSection>('homepage_product_sections?select=*,categories(slug)&is_active=eq.true&order=sort_order.asc,created_at.asc', { resource: 'public homepage product sections' });
 }
 
 export async function getHomepageSection(id: string): Promise<DbHomepageSection | null> {
