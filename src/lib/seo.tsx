@@ -20,7 +20,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> | Array<Record<
 }
 
 export function businessGraph(socialLinks: string[] = []) {
-  const searchLogo = absoluteUrl('/the-snohomish-logo.svg');
+  const searchLogo = absoluteUrl('/the-snohomish-logo.webp');
   return {
   '@context': 'https://schema.org',
   '@graph': [

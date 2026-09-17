@@ -1,4 +1,4 @@
-const OFFICIAL_LOGO_SRC = "/the-snohomish-logo.svg";
+const OFFICIAL_LOGO_SRC = "/the-snohomish-logo.webp";
 
 export function BrandLogo({ footer = false }: { footer?: boolean }) {
   return (
@@ -6,6 +6,10 @@ export function BrandLogo({ footer = false }: { footer?: boolean }) {
       <img
         src={OFFICIAL_LOGO_SRC}
         alt="The Snohomish"
+        width={176}
+        height={173}
+        decoding="async"
+        fetchPriority="high"
         className={
           footer
             ? "h-44 w-44 rounded-full bg-white object-contain p-1 ring-2 ring-[#fff500]"

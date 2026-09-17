@@ -36,9 +36,9 @@ const baseMetadata: Metadata = {
   },
   twitter: { card: 'summary_large_image', title: 'The Snohomish | Wines, Spirits, Retail & Wholesale Nairobi', description: DEFAULT_DESCRIPTION },
   icons: {
-    icon: [{ url: '/the-snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
-    shortcut: '/the-snohomish-logo.svg',
-    apple: [{ url: '/the-snohomish-logo.svg', type: 'image/svg+xml', sizes: 'any' }],
+    icon: [{ url: '/the-snohomish-logo.webp', type: 'image/webp', sizes: '176x173' }],
+    shortcut: '/the-snohomish-logo.webp',
+    apple: [{ url: '/the-snohomish-logo.webp', type: 'image/webp', sizes: '176x173' }],
   },
   manifest: '/site.webmanifest',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
