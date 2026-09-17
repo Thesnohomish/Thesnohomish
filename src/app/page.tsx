@@ -41,14 +41,18 @@ export default async function Home() {
     const categorySlug = section.categories?.slug || headingCategory?.slug || (rowCategorySlugs.length === 1 ? rowCategorySlugs[0] : undefined);
     const collectionSlug = stableCollectionSlug(section);
     const isDealsZaWiki = /deals\s+za\s+wiki/i.test(section.heading) && section.product_ids?.length > 0;
+    const limit = Math.min(Math.max(section.item_limit, 8), 12);
     return {
     title: section.heading,
     description: section.description || undefined,
-    products: rowProducts,
+    // ProductRail is a client component. Passing the complete catalogue here
+    // embeds every product in the initial RSC/HTML response even though only a
+    // handful of cards are displayed. Send only what this rail can render.
+    products: rowProducts.slice(0, limit),
     href: isDealsZaWiki ? `/collections/${section.id}` : categorySlug ? categoryCanonicalPath(categorySlug) : collectionSlug ? `/collections/${collectionSlug}` : '/shop',
     // Keep enough products to fill the rail without forcing low-data visitors
     // to download a second full desktop row on the homepage.
-    limit: Math.min(Math.max(section.item_limit, 8), 12),
+    limit,
   }}).filter(section => section.products.length);
   return <main>
     <HeroCarousel banners={banners}/>
