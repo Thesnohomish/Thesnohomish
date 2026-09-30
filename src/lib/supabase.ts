@@ -150,7 +150,13 @@ export type SiteContent = {
 };
 export async function getSiteContent(): Promise<SiteContent> {
   const rows = await supabaseFetch<{ value: SiteContent }>('store_settings?select=value&key=eq.site_content&is_public=eq.true&limit=1', { resource: 'public website settings' });
-  return rows[0]?.value || {};
+  const content = rows[0]?.value || {};
+  return {
+    ...content,
+    contact_phone: content.contact_phone?.trim() || '+254 726 764759',
+    contact_email: content.contact_email?.trim() || 'Snohomishkenya@gmail.com',
+    whatsapp_url: content.whatsapp_url?.trim() || 'https://wa.me/254726764759',
+  };
 }
 
 export const money = (value: number) => `KES ${Number(value).toLocaleString('en-KE')}`;
