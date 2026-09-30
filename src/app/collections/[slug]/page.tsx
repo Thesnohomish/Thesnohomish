@@ -11,7 +11,15 @@ type CollectionDefinition = { title: string; matches: (product: Product) => bool
 
 // Discounted products have their canonical page at /offers. Keep this registry
 // limited to the three stable collection routes.
-const collections: Record<StableCollectionSlug, CollectionDefinition> = {
+const collections: Record<string, CollectionDefinition> = {
+  'jack-daniels': { title: 'All Jack Daniel’s', matches: product => `${product.name} ${product.brands?.name || ''}`.toLowerCase().replace(/[^a-z0-9]/g, '').includes('jackdaniel') },
+  'single-malts': { title: 'All Single Malts', matches: product => {
+    const type = (product.whisky_type || '').toLowerCase();
+    const name = `${product.name} ${product.brands?.name || ''}`.toLowerCase();
+    if (/blended|bourbon|rye|irish whiskey|tennessee/.test(type) || /blended|bourbon cask nas|3yo/.test(name)) return false;
+    return /single[ -]?malt/.test(type + ' ' + name) || /glenfiddich|glenlivet|macallan|singleton|talisker|paul john|lagavulin|dalmore|bowmore|ardbeg|laphroaig|balvenie|glenmorangie|aberlour|glenfarclas|glendronach|glenallachie|tamnavulin|kilchoman|bunnahabhain|bruichladdich|highland park|mortlach|kavalan|amrut|oban/.test(name);
+  } },
+  'tequilas': { title: 'All Tequilas', matches: product => /tequila/i.test(product.categories?.name || '') || /tequila|patr[oó]n|jose cuervo|corralejo|casamigos|casa noble|casa maestri|don julio|olmeca|espol[oò]n|clase azul|1800|sierra tequila/i.test(product.name) },
   'top-sellers': { title: 'Top Sellers', matches: product => Boolean(product.is_top_seller) },
   'new-arrivals': { title: 'New Arrivals', matches: product => Boolean(product.is_new_arrival) },
   featured: { title: 'Featured Offers', matches: product => Boolean(product.is_featured) },
@@ -28,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let customSection = null;
-  if (!stableCollectionSlugs.includes(slug as typeof stableCollectionSlugs[number])) {
+  if (!collections[slug]) {
     const legacySection = await getHomepageSection(slug);
     const hasManualProducts = Boolean(legacySection?.product_ids.length);
     const destination = legacySection && !hasManualProducts ? stableCollectionSlug(legacySection) : null;
