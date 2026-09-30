@@ -4,8 +4,28 @@ import { SmartImage } from "@/components/SmartImage";
 
 const BANNERS_PER_PAGE = 2;
 
+// Replace these existing campaigns only; later admin uploads take precedence.
+const campaignReplacements: Record<string, Pick<DbBanner, 'title' | 'image_url' | 'mobile_image_url' | 'button_url'>> = {
+  'c57e9519-258d-4549-923b-df5c5c78a21c-chatgpt-image-sep-30-2026-01-52-43-pm-1.webp': {
+    title: 'Jack Daniel’s Old No. 7 — 1 litre at KSh 3,400',
+    image_url: '/campaigns/jack-daniels-1l-3400.webp',
+    mobile_image_url: '/campaigns/jack-daniels-1l-3400.webp',
+    button_url: '/product/jack-daniel-s-1-litre',
+  },
+  '6a82ae14-012d-475f-9d41-ab17319f32c6-glenbrynth-exact-products-hero-1500x375.webp': {
+    title: 'Single Malt Heaven',
+    image_url: '/campaigns/home-of-single-malts.webp',
+    mobile_image_url: '/campaigns/home-of-single-malts.webp',
+    button_url: '/shop',
+  },
+};
+
 export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
-  const visibleBanners = banners.slice(0, BANNERS_PER_PAGE);
+  const visibleBanners = banners.slice(0, BANNERS_PER_PAGE).map((banner) => {
+    const filename = banner.image_url?.split('/').pop() || '';
+    const replacement = campaignReplacements[filename];
+    return replacement ? { ...banner, ...replacement } : banner;
+  });
   const banner = visibleBanners[0];
 
   if (!banner) {
