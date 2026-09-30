@@ -11,14 +11,14 @@ const BANNERS_PER_PAGE = 3;
 const campaignReplacements: Record<string, Pick<DbBanner, 'title' | 'image_url' | 'mobile_image_url' | 'button_url'>> = {
   'c57e9519-258d-4549-923b-df5c5c78a21c-chatgpt-image-sep-30-2026-01-52-43-pm-1.webp': {
     title: 'Jack Daniel’s Old No. 7 — 1 litre at KSh 3,400',
-    image_url: '/campaigns/jack-daniels-1l-3400.webp',
-    mobile_image_url: '/campaigns/jack-daniels-1l-3400.webp',
+    image_url: '/campaigns/jack-daniels-1l-3400.webp?v=20260930-approved',
+    mobile_image_url: '/campaigns/jack-daniels-1l-3400.webp?v=20260930-approved',
     button_url: '/collections/jack-daniels',
   },
   '6a82ae14-012d-475f-9d41-ab17319f32c6-glenbrynth-exact-products-hero-1500x375.webp': {
     title: 'Single Malt Heaven',
-    image_url: '/campaigns/home-of-single-malts.webp',
-    mobile_image_url: '/campaigns/home-of-single-malts.webp',
+    image_url: '/campaigns/home-of-single-malts.webp?v=20260930-approved',
+    mobile_image_url: '/campaigns/home-of-single-malts.webp?v=20260930-approved',
     button_url: '/collections/single-malts',
   },
 };
@@ -30,7 +30,7 @@ export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
     return replacement ? { ...banner, ...replacement } : banner;
   });
   if (visibleBanners.some(slide => slide.image_url.startsWith('/campaigns/')) && visibleBanners.length < BANNERS_PER_PAGE) {
-    visibleBanners.push({ id: 'tequila-discounts-campaign', title: 'Discounts on all tequilas', image_url: '/campaigns/tequila-discounts.webp', button_url: '/collections/tequilas', is_active: true });
+    visibleBanners.push({ id: 'tequila-discounts-campaign', title: 'Discounts on all tequilas', image_url: '/campaigns/tequila-discounts.webp?v=20260930-approved', button_url: '/collections/tequilas', is_active: true });
   }
   const [activeSlide, setActiveSlide] = useState(0);
   useEffect(() => {
