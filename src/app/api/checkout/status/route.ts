@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/server/supabase-admin';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('snohomish_order_token')?.value;
   if (!token) return NextResponse.json({ found: false }, { status: 404 });
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const terminalFailure = ['failed', 'cancelled', 'timed_out'].includes(String(order.payment_status));
   const ready = order.payment_method === 'mpesa'
-    ? order.payment_status === 'paid' && order.status === 'paid'
+    ? order.payment_status === 'paid'
     : !terminalFailure && order.status !== 'awaiting_payment';
 
   return NextResponse.json({

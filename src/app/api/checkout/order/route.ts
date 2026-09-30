@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kenyaPhone, requestStkPush } from '@/lib/server/mpesa';
+import { assertMpesaConfigured, kenyaPhone, requestStkPush } from '@/lib/server/mpesa';
 import { getAdminSupabase } from '@/lib/server/supabase-admin';
 import { createServerSupabase } from '@/lib/supabase-server';
 import { sendOrderEmail, type EmailOrder } from '@/lib/server/order-email';
@@ -32,9 +32,13 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(body.cart) || !body.cart.length || !body.customer?.name || !body.customer?.phone || (!isPickup && !body.customer?.address)) return NextResponse.json({ error: 'Add your contact and delivery details before placing the order.' }, { status: 400 });
     if (!['mpesa','cash','pickup'].includes(body.paymentMethod)) return NextResponse.json({ error: 'Unsupported payment method.' }, { status: 400 });
 
+    const mpesaPhone = body.paymentMethod === 'mpesa' ? kenyaPhone(body.customer.phone) : null;
+    if (mpesaPhone) assertMpesaConfigured();
     const db = getAdminSupabase();
     const auth = await createServerSupabase();
     const { data: authData } = auth ? await auth.auth.getUser() : { data: { user: null } };
+    const lineKeys = body.cart.map(line => `${line.productId}:${line.variantId || ''}`);
+    if (new Set(lineKeys).size !== lineKeys.length) throw new Error('Your cart contains duplicate items. Refresh your cart and try again.');
     const productIds = [...new Set(body.cart.map(item => item.productId))];
     const { data: liveProducts, error: productsError } = await db.from('products').select('id,name,price,stock,is_active,track_inventory,product_variants(id,name,price,stock,is_active)').in('id', productIds);
     if (productsError) throw productsError;
@@ -81,7 +85,9 @@ export async function POST(request: NextRequest) {
     const deliveryFee = isPickup || subtotal >= 10000 ? 0 : Number(band?.fee || 0);
     const total = subtotal + deliveryFee, orderNumber = `CH-${Date.now().toString(36).toUpperCase()}`;
     const paymentStatus = body.paymentMethod === 'mpesa' ? 'pending_payment' : body.paymentMethod === 'cash' ? 'cash_due' : 'pending';
-    const orderStatus = body.paymentMethod === 'mpesa' ? 'awaiting_payment' : 'pending';
+    const orderStatus = body.paymentMethod === 'mpesa' ? 'pending_payment' : 'pending';
+
+    if (body.paymentMethod === 'mpesa' && (!Number.isSafeInteger(total) || total < 1)) throw new Error('M-Pesa payments require a positive whole-shilling order total.');
 
     let customerId: string | null = null, deliveryLocationId: string | null = null;
     if (authData.user) {
@@ -107,15 +113,17 @@ export async function POST(request: NextRequest) {
     const emailOrder: EmailOrder = { id: order.id, orderNumber: order.order_number, customerName: body.customer.name.trim(), customerEmail: body.customer.email?.trim() || null, customerPhone: body.customer.phone, deliveryAddress: isPickup ? 'Store pickup' : body.customer.address.trim(), paymentMethod: body.paymentMethod, subtotal, deliveryFee, total, estimatedDelivery: isPickup ? 'Ready-time confirmation will follow' : band ? `${band.estimated_minutes_min}–${band.estimated_minutes_max} minutes` : 'Delivery estimate will follow', items: items.map(item => ({ name: String(item.product_name), quantity: Number(item.quantity), unitPrice: Number(item.unit_price), lineTotal: Number(item.line_total) })) };
 
     if (body.paymentMethod === 'mpesa') {
-      const phone = kenyaPhone(body.customer.phone);
+      const phone = mpesaPhone!;
       try {
         const stk = await requestStkPush({ amount: total, phone, accountReference: order.order_number, description: 'The Snohomish order' });
-        await db.from('payments').insert({ order_id: order.id, provider: 'mpesa', status: 'pending', amount: total, phone_number: phone, merchant_request_id: stk.merchantRequestId, checkout_request_id: stk.checkoutRequestId });
+        const { error: paymentError } = await db.from('payments').insert({ order_id: order.id, provider: 'mpesa', status: 'pending', amount: total, phone_number: phone, merchant_request_id: stk.merchantRequestId, checkout_request_id: stk.checkoutRequestId });
+        if (paymentError) { console.error('[M-Pesa payment persistence]', { orderId: order.id, checkoutRequestId: stk.checkoutRequestId, code: paymentError.code }); throw new Error('The payment prompt was sent, but tracking could not be saved. Contact the store with your order number before paying or retrying.'); }
         const response = NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus: 'pending_payment', subtotal, deliveryFee, distanceKm: km, total, message: 'Check your phone and enter your M-Pesa PIN to complete payment.' });
         response.cookies.set('snohomish_order_token', order.checkout_token, { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 30 });
         return response;
       } catch (error) {
-        await db.from('orders').update({ payment_status: 'failed', status: 'awaiting_payment' }).eq('id', order.id);
+        console.error('[M-Pesa checkout]', error);
+        await db.from('orders').update({ payment_status: 'failed', status: 'pending_payment' }).eq('id', order.id);
         return NextResponse.json({ orderNumber: order.order_number, checkoutToken: order.checkout_token, paymentStatus: 'failed', error: error instanceof Error ? error.message : 'M-Pesa could not start.' }, { status: 502 });
       }
     }

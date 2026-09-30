@@ -14,6 +14,7 @@ type OrderState = {
 
 export function OrderSuccessPopup() {
   const [orderNumber, setOrderNumber] = useState('');
+  const [failure, setFailure] = useState('');
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -40,12 +41,18 @@ export function OrderSuccessPopup() {
             localStorage.removeItem('chupahub-cart');
             window.dispatchEvent(new Event('chupahub-cart-updated'));
             clearTrackingCookie();
+            window.dispatchEvent(new Event('snohomish-payment-paid'));
+            setFailure('');
             setOrderNumber(state.orderNumber);
             setOpen(true);
             return;
           }
           if (state.terminalFailure) {
             clearTrackingCookie();
+            window.dispatchEvent(new CustomEvent('snohomish-payment-failed', { detail: state }));
+            setOrderNumber(state.orderNumber || '');
+            setFailure(state.paymentStatus === 'cancelled' ? 'You cancelled the M-Pesa payment.' : state.paymentStatus === 'timed_out' ? 'The M-Pesa payment prompt timed out.' : 'The M-Pesa payment was not completed.');
+            setOpen(true);
             return;
           }
         }
@@ -68,11 +75,11 @@ export function OrderSuccessPopup() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="order-success-title">
       <div className="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700">✓</div>
-        <h2 id="order-success-title" className="mt-4 text-2xl font-black text-brand-ink">Order received</h2>
-        <p className="mt-2 text-neutral-700">Your order <strong>{orderNumber}</strong> has gone through successfully and is now with our dispatch team.</p>
-        <p className="mt-2 text-sm text-neutral-500">We will update you when your rider leaves with the order.</p>
-        <button type="button" onClick={() => setOpen(false)} className="mt-6 w-full rounded-xl bg-brand-deep px-5 py-3 font-black text-white">Continue shopping</button>
+        <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl ${failure ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>{failure ? '!' : '✓'}</div>
+        <h2 id="order-success-title" className="mt-4 text-2xl font-black text-brand-ink">{failure ? 'Payment not completed' : 'Order received'}</h2>
+        <p className="mt-2 text-neutral-700">{failure ? <>{failure} Your cart is saved so you can try again.</> : <>Your order <strong>{orderNumber}</strong> has gone through successfully and is now with our dispatch team.</>}</p>
+        {!failure && <p className="mt-2 text-sm text-neutral-500">We will update you when your rider leaves with the order.</p>}
+        <button type="button" onClick={() => setOpen(false)} className="mt-6 w-full rounded-xl bg-brand-deep px-5 py-3 font-black text-white">{failure ? 'Back to checkout' : 'Continue shopping'}</button>
       </div>
     </div>
   );

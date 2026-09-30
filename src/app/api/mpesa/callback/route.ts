@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { mpesaTransactionDate, queryStkPush } from '@/lib/server/mpesa';
 import { getAdminSupabase } from '@/lib/server/supabase-admin';
 import { sendOrderEmail, type EmailOrder } from '@/lib/server/order-email';
 import { sendOrderSms } from '@/lib/server/order-sms';
@@ -14,13 +15,14 @@ export async function POST(request: NextRequest) {
       );
 
     const db = getAdminSupabase();
-    const { data: payment } = await db
+    const { data: payment, error: paymentError } = await db
       .from('payments')
-      .select('id,order_id,status,amount')
+      .select('id,order_id,status,amount,phone_number,merchant_request_id')
       .eq('checkout_request_id', callback.CheckoutRequestID)
       .maybeSingle();
-    if (!payment || payment.status === 'paid')
-      return NextResponse.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+    if (paymentError) throw paymentError;
+    if (!payment) return NextResponse.json({ ResultCode: 1, ResultDesc: 'Payment reference not recorded yet' }, { status: 503 });
+    if (String(callback.MerchantRequestID) !== String(payment.merchant_request_id)) return NextResponse.json({ ResultCode: 1, ResultDesc: 'Payment reference mismatch' }, { status: 400 });
 
     const metadata = Object.fromEntries(
       (callback.CallbackMetadata?.Item || []).map(
@@ -29,7 +31,16 @@ export async function POST(request: NextRequest) {
     );
     const success =
       Number(callback.ResultCode) === 0 &&
-      Number(metadata.Amount) === Number(payment.amount);
+      Number(metadata.Amount) === Number(payment.amount) &&
+      String(metadata.PhoneNumber) === String(payment.phone_number) &&
+      Boolean(metadata.MpesaReceiptNumber);
+    // Verify successful payment directly with Daraja before marking an order paid.
+    if (Number(callback.ResultCode) === 0 && !success) return NextResponse.json({ ResultCode: 1, ResultDesc: 'Payment details mismatch' }, { status: 400 });
+    if (success && payment.status !== 'paid') {
+      const verified = await queryStkPush(String(callback.CheckoutRequestID));
+      if (verified.resultCode !== '0') return NextResponse.json({ ResultCode: 1, ResultDesc: 'Payment not confirmed by Daraja' }, { status: 503 });
+    }
+    if (payment.status === 'paid' && !success) return NextResponse.json({ ResultCode: 0, ResultDesc: 'Accepted' });
     const paymentStatus = success
       ? 'paid'
       : Number(callback.ResultCode) === 1032
@@ -38,32 +49,34 @@ export async function POST(request: NextRequest) {
           ? 'timed_out'
           : 'failed';
 
-    await db
+    const { error: paymentUpdateError } = await db
       .from('payments')
       .update({
         status: paymentStatus,
         receipt_number: String(metadata.MpesaReceiptNumber || '') || null,
-        transaction_at: metadata.TransactionDate
-          ? new Date(String(metadata.TransactionDate)).toISOString()
-          : null,
+        transaction_at: mpesaTransactionDate(metadata.TransactionDate),
         provider_result_code: String(callback.ResultCode),
         provider_result_desc: callback.ResultDesc,
         raw_callback: payload,
       })
-      .eq('id', payment.id);
+      .eq('id', payment.id)
+      .neq('status', 'paid');
+    if (paymentUpdateError) throw paymentUpdateError;
 
     // Payment state and fulfilment state are intentionally separate.
     // A successful M-Pesa payment remains a new/pending fulfilment order until admin dispatches it.
-    await db
+    const { data: updatedOrders, error: orderUpdateError } = await db
       .from('orders')
       .update({
         payment_status: paymentStatus,
-        status: success ? 'pending' : 'awaiting_payment',
+        status: success ? 'pending' : 'pending_payment',
       })
       .eq('id', payment.order_id)
-      .eq('payment_status', 'pending_payment');
+      .in('payment_status', success ? ['pending_payment', 'failed', 'cancelled', 'timed_out'] : ['pending_payment'])
+      .select('id');
+    if (orderUpdateError) throw orderUpdateError;
 
-    if (success) {
+    if (success && updatedOrders?.length) {
       const { data: order } = await db
         .from('orders')
         .select(
