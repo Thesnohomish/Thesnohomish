@@ -7,31 +7,8 @@ import { SmartImage } from "@/components/SmartImage";
 
 const BANNERS_PER_PAGE = 3;
 
-// Replace these existing campaigns only; later admin uploads take precedence.
-const campaignReplacements: Record<string, Pick<DbBanner, 'title' | 'image_url' | 'mobile_image_url' | 'button_url'>> = {
-  'c57e9519-258d-4549-923b-df5c5c78a21c-chatgpt-image-sep-30-2026-01-52-43-pm-1.webp': {
-    title: 'Jack Daniel’s Old No. 7 — 1 litre at KSh 3,400',
-    image_url: '/campaigns/jack-daniels-1l-3400-buy-now.webp',
-    mobile_image_url: '/campaigns/jack-daniels-1l-3400-buy-now.webp',
-    button_url: '/collections/jack-daniels',
-  },
-  '6a82ae14-012d-475f-9d41-ab17319f32c6-glenbrynth-exact-products-hero-1500x375.webp': {
-    title: 'Home of Single Malts — Buy now',
-    image_url: '/campaigns/home-of-single-malts-buy-now.webp',
-    mobile_image_url: '/campaigns/home-of-single-malts-buy-now.webp',
-    button_url: '/collections/single-malts',
-  },
-};
-
 export function HeroCarousel({ banners }: { banners: DbBanner[] }) {
-  const visibleBanners = banners.slice(0, BANNERS_PER_PAGE).map((banner) => {
-    const filename = banner.image_url?.split('/').pop() || '';
-    const replacement = campaignReplacements[filename];
-    return replacement ? { ...banner, ...replacement } : banner;
-  });
-  if (visibleBanners.some(slide => slide.image_url.startsWith('/campaigns/')) && visibleBanners.length < BANNERS_PER_PAGE) {
-    visibleBanners.push({ id: 'tequila-discounts-campaign', title: 'Discounts on all tequilas', image_url: '/campaigns/tequila-discounts-buy-now.webp', button_url: '/collections/tequilas', is_active: true });
-  }
+  const visibleBanners = banners.filter(banner => banner.is_active).slice(0, BANNERS_PER_PAGE);
   const [activeSlide, setActiveSlide] = useState(0);
   useEffect(() => {
     if (visibleBanners.length < 2) return;

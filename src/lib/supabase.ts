@@ -59,7 +59,7 @@ export async function getCategory(slug: string): Promise<DbCategory | null> {
 
 export async function getBanners(): Promise<DbBanner[]> {
   const rows = await supabaseFetch<DbBanner>('homepage_banners?select=*&is_active=eq.true&order=sort_order.asc,created_at.desc', {
-    resource: 'public homepage banners',
+    cache: 'no-store', resource: 'public homepage banners',
   });
   const now = Date.now();
   const activeRows = rows.filter((row) => (!row.starts_at || Date.parse(row.starts_at) <= now) && (!row.ends_at || Date.parse(row.ends_at) >= now));
