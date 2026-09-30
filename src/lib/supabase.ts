@@ -91,10 +91,12 @@ export async function getProducts(): Promise<DbProduct[]> {
   return supabaseFetch<DbProduct>('products?select=*,categories(name,slug),brands(name,country),product_variants(*)&is_active=eq.true&order=updated_at.desc,created_at.desc', { cache: 'no-store', resource: 'public products and relationships' });
 }
 
-/** Lightweight catalogue shape used only by homepage product cards. */
+/** Lightweight catalogue shape used only by homepage product cards.
+ * Select existing variant columns so optional discount migrations cannot hide the catalogue.
+ */
 export async function getHomepageProducts(): Promise<DbProduct[]> {
   return supabaseFetch<DbProduct>(
-    'products?select=id,name,slug,price,old_price,discount_starts_at,discount_ends_at,discount_label,stock,image_url,bottle_size,country,abv,is_top_seller,is_featured,categories(name,slug),product_variants(id,name,price,old_price,discount_starts_at,discount_ends_at,discount_label,stock,image_url,is_active)&is_active=eq.true&order=updated_at.desc,created_at.desc',
+    'products?select=id,name,slug,price,old_price,discount_starts_at,discount_ends_at,discount_label,stock,image_url,bottle_size,country,abv,is_top_seller,is_featured,categories(name,slug),product_variants(*)&is_active=eq.true&order=updated_at.desc,created_at.desc',
     { resource: 'homepage products' },
   );
 }
